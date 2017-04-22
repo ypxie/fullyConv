@@ -1,0 +1,13 @@
+*.DS_Store
+*.pyc
+*py~
+Data/*
+*.swp
+.vscode
+*~
+temp/*
+# test-related
+.coverage
+.cache
+# developer environments
+.idea
