@@ -13,3 +13,4 @@ temp/*
 .idea
 .ipython*
 */.ipynb*
+*/.ipynb_checkpoints/*
