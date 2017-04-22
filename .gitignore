@@ -12,3 +12,4 @@ temp/*
 # developer environments
 .idea
 .ipython*
+.ipynb*
