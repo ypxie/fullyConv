@@ -163,7 +163,7 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'DataSet', 'Nature' ,'Experiments','evaluation')
+        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'Nature' ,'Experiments','evaluation')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
         
