@@ -363,7 +363,7 @@ class MultiContex_seg(nn.Module):
         total_num = x.size()[0]
         if batch_size is None or batch_size <= total_num:
             det, seg, _ = self.forward(x, adv=False)
-            return det.cpu().data.numpy(),seg.cpu().data.numpy() #,adv.cpu().data.numpy(),
+            return [det.cpu().data.numpy(),seg.cpu().data.numpy()] #,adv.cpu().data.numpy(),
         else:
             det_results = []
             seg_results = []
@@ -375,4 +375,4 @@ class MultiContex_seg(nn.Module):
                 det_results.append(det.cpu().data.numpy())
                 seg_results.append(seg.cpu().data.numpy())
                 #advs.append(adv.cpu().data.numpy())
-            return np.concatenate(det_results,axis=0), np.concatenate(seg_results,axis=0)
+            return [np.concatenate(det_results,axis=0), np.concatenate(seg_results,axis=0)]

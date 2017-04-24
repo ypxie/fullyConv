@@ -451,7 +451,7 @@ def patchflow(Img,chunknum,row,col,channel,**kwargs):
 def Indexflow(Totalnum, batch_size, random=True):
     numberofchunk = int(Totalnum + batch_size - 1)// int(batch_size)   # the floor
     #Chunkfile = np.zeros((batch_size, row*col*channel))
-    totalIndx = np.arange(Totalnum)
+    totalIndx = np.arange(Totalnum).astype(np.int)
     if random is True:
         totalIndx = np.random.permutation(totalIndx)
 
@@ -640,10 +640,10 @@ def mask2contour(org, mask, **kwargs):
        savepath = '/home/yuanpuxie/Desktop/testImg/save.png'
        mask2contour(org, mask, color = [0,0,1], linewidth=3)
     '''
-    if isinstance(org, basestring):
+    if isinstance(org, str):
         org = np.asarray(Image.open(org))
 
-    if isinstance(mask, basestring):
+    if isinstance(mask, str):
         mask = np.asarray(Image.open(mask))
         print(mask.shape)
         if len(mask.shape) == 3:
@@ -704,14 +704,14 @@ def label2contour(label_img, org=None, print_color = [0,0,1], linewidth = 2, alp
         
         contourlist[id] = safe_boarder(thiscontour, row, col)
         contour_img[thiscontour[:, 0], thiscontour[:, 1]] = True
+    masked_img = None
     if returnImg:
         se = np.array([[ True,  True,  True],
                        [ True,  True,  True],
                        [ True,  True,  True]], dtype=bool)
         contour_mask = skimage.morphology.binary_dilation(contour_img, se)
-        return overlayImg(org, contour_mask , print_color = print_color, alpha = alpha), contourlist
-    else:
-        return contourlist
+        masked_img = overlayImg(org, contour_mask , print_color = print_color, alpha = alpha)
+    return masked_img, contourlist
 
 def markcontours(org, contours,print_color = [0,0,1], linewidth = 2, alpha = 1):
     contour_img = np.zeros(org.shape[0:2])
@@ -885,7 +885,6 @@ def Deprecate_split_img(img, windowsize=1000, board = 0, fixed_window = False, s
 
     return (IndexDict, PackList)
 
-@autojit
 def split_img(img, windowsize=1000, board = 0, fixed_window = False, step_size = None):
     '''
     img dimension: channel, row, col
@@ -936,11 +935,16 @@ def split_img(img, windowsize=1000, board = 0, fixed_window = False, step_size =
     IndexDict = {}
     identifier = -1
     PackList = []
-    if windowsize is None:
-        thisPatch = img.copy()
-        rowsize, colsize = img.shape[1:]
+    row_size, col_size = img.shape[1], img.shape[2]
+    if windowsize is not None and  type(windowsize) is int:
+        windowsize = (windowsize, windowsize)
+
+    if windowsize is None or (row_size <= windowsize[0] and col_size<=windowsize[1] and (not fixed_window)):
+        pad_img = img
+        rowsize, colsize = pad_img.shape[1:]
         org_slice = (slice(0, rowsize), slice(0, colsize))
-        extract_slice = (slice(0, rowsize), slice(0, colsize))
+        extract_slice = org_slice
+        crop_patch_slice = org_slice
         thisSize =  (rowsize, colsize )
         identifier = identifier + 1
 
@@ -949,106 +953,98 @@ def split_img(img, windowsize=1000, board = 0, fixed_window = False, step_size =
         else:
            IndexDict[thisSize] = []
            IndexDict[thisSize].append(identifier)
+        PackList.append((crop_patch_slice, org_slice ,extract_slice, thisSize,identifier))
 
-        PackList.append((thisPatch,org_slice ,extract_slice, thisSize,identifier))
+    else:
 
-       #it means we dont split the image,
-        return (IndexDict, PackList)
+        hidden_windowsize = (windowsize[0]-2*board, windowsize[1]-2*board)
+        for each_size in hidden_windowsize:
+            if each_size <= 0:
+                raise RuntimeError('windowsize can not be smaller than board*2.')
 
-
-    if type(windowsize) is int:
-        windowsize = (windowsize, windowsize)
-
-    hidden_windowsize = (windowsize[0]-2*board, windowsize[1]-2*board)
-    for each_size in hidden_windowsize:
-        if each_size <= 0:
-            raise RuntimeError('windowsize can not be smaller than board*2.')
-
-    if type(step_size) is int:
-        step_size = (step_size, step_size)
-    if step_size is None:
-        step_size = hidden_windowsize
+        if type(step_size) is int:
+            step_size = (step_size, step_size)
+        if step_size is None:
+            step_size = hidden_windowsize
 
 
 
-    row_size, col_size = img.shape[1], img.shape[2]
+        numRowblocks = int(math.ceil(float(row_size)/step_size[0]))
+        numColblocks = int(math.ceil(float(col_size)/step_size[1]))
 
-    numRowblocks = int(math.ceil(float(row_size)/step_size[0]))
-    numColblocks = int(math.ceil(float(col_size)/step_size[1]))
-
-    # sanity check, make sure the image is at least of size window_size to the left-hand side if fixed_windows is true
-    # which means,    -----*******|-----, left to the vertical board of original image is at least window_size.
-    row_addition_board, col_addition_board = 0, 0
-    addition_board = 0
-    if fixed_window:
-        if row_size + 2 * board < windowsize[0]: # means we need to add more on board.
-            row_addition_board = windowsize[0] - (row_size + 2 * board )
-        if col_size + 2 * board < windowsize[1]: # means we need to add more on board.
-            col_addition_board = windowsize[1] - (col_size + 2 * board)
-        addition_board = row_addition_board if row_addition_board > col_addition_board else col_addition_board
-
-    left_pad = addition_board + board
-    pad4d = ((0,0),( left_pad , board), ( left_pad , board ))
-    pad_img = np.pad(img, pad4d, 'symmetric').astype(img.dtype)
-
-    thisrowstart, thiscolstart =0, 0
-    thisrowend, thiscolend = 0,0
-    for row_idx in range(numRowblocks):
-        thisrowlen = min(hidden_windowsize[0], row_size - row_idx * step_size[0])
-        row_step_len = min(step_size[0], row_size - row_idx * step_size[0])
-
-        thisrowstart = 0 if row_idx == 0 else thisrowstart + step_size[0]
-
-        thisrowend = thisrowstart + thisrowlen
-
-        row_shift = 0
+        # sanity check, make sure the image is at least of size window_size to the left-hand side if fixed_windows is true
+        # which means,    -----*******|-----, left to the vertical board of original image is at least window_size.
+        row_addition_board, col_addition_board = 0, 0
+        addition_board = 0
         if fixed_window:
-            if thisrowlen < hidden_windowsize[0]:
-                row_shift = hidden_windowsize[0] - thisrowlen
+            if row_size + 2 * board < windowsize[0]: # means we need to add more on board.
+                row_addition_board = windowsize[0] - (row_size + 2 * board )
+            if col_size + 2 * board < windowsize[1]: # means we need to add more on board.
+                col_addition_board = windowsize[1] - (col_size + 2 * board)
+            addition_board = row_addition_board if row_addition_board > col_addition_board else col_addition_board
 
-        for col_idx in range(numColblocks):
-            thiscollen = min(hidden_windowsize[1], col_size -  col_idx * step_size[1])
-            col_step_len = min(step_size[1], col_size - col_idx * step_size[1])
+        left_pad = addition_board + board
+        pad4d = ((0,0),( left_pad , board), ( left_pad , board ))
+        pad_img = np.pad(img, pad4d, 'symmetric').astype(img.dtype)
 
-            thiscolstart = 0 if col_idx == 0 else thiscolstart + step_size[1]
+        thisrowstart, thiscolstart =0, 0
+        thisrowend, thiscolend = 0,0
+        for row_idx in range(numRowblocks):
+            thisrowlen = min(hidden_windowsize[0], row_size - row_idx * step_size[0])
+            row_step_len = min(step_size[0], row_size - row_idx * step_size[0])
 
-            thiscolend = thiscolstart + thiscollen
+            thisrowstart = 0 if row_idx == 0 else thisrowstart + step_size[0]
 
-            col_shift = 0
+            thisrowend = thisrowstart + thisrowlen
+
+            row_shift = 0
             if fixed_window:
-                # we need to shift the patch to left to make it at least windowsize.
-                if thiscollen < hidden_windowsize[1]:
-                    col_shift = hidden_windowsize[1] - thiscollen
+                if thisrowlen < hidden_windowsize[0]:
+                    row_shift = hidden_windowsize[0] - thisrowlen
 
-            #
-            #----board----******************----board----
-            #
-            crop_r_start = thisrowstart - board - row_shift + left_pad
-            crop_c_start = thiscolstart - board - col_shift + left_pad
-            crop_r_end  =  thisrowend + board + left_pad
-            crop_c_end  =  thiscolend + board + left_pad
+            for col_idx in range(numColblocks):
+                thiscollen = min(hidden_windowsize[1], col_size -  col_idx * step_size[1])
+                col_step_len = min(step_size[1], col_size - col_idx * step_size[1])
 
-            #we need to handle the tricky board condition
-            # thispatch will be of size (:,:, windowsize+ 2*board)
-            #thisPatch =  pad_img[:,crop_r_start:crop_r_end, crop_c_start:crop_c_end].copy()
-            crop_patch_slice = (slice(crop_r_start, crop_r_end), slice(crop_c_start, crop_c_end))
-            thisSize = (thisrowlen + 2*board + row_shift, thiscollen + 2*board + col_shift)
+                thiscolstart = 0 if col_idx == 0 else thiscolstart + step_size[1]
 
-            org_slice = (slice(thisrowstart, thisrowend), slice(thiscolstart, thiscolend)) 
-            # slice on a cooridinate of the original image
+                thiscolend = thiscolstart + thiscollen
 
-            extract_slice = (slice(board + row_shift, board + thisrowlen + row_shift), 
-                             slice(board + col_shift, board + col_shift + thiscollen)) 
-            # extract on local coordinate of a patch
+                col_shift = 0
+                if fixed_window:
+                    # we need to shift the patch to left to make it at least windowsize.
+                    if thiscollen < hidden_windowsize[1]:
+                        col_shift = hidden_windowsize[1] - thiscollen
 
-            identifier =  identifier +1
-            PackList.append((crop_patch_slice,org_slice ,extract_slice, thisSize,identifier))
+                #
+                #----board----******************----board----
+                #
+                crop_r_start = thisrowstart - board - row_shift + left_pad
+                crop_c_start = thiscolstart - board - col_shift + left_pad
+                crop_r_end  =  thisrowend + board + left_pad
+                crop_c_end  =  thiscolend + board + left_pad
 
-            if thisSize in IndexDict:
-               IndexDict[thisSize].append(identifier)
-            else:
-               IndexDict[thisSize] = []
-               IndexDict[thisSize].append(identifier)
+                #we need to handle the tricky board condition
+                # thispatch will be of size (:,:, windowsize+ 2*board)
+                #thisPatch =  pad_img[:,crop_r_start:crop_r_end, crop_c_start:crop_c_end].copy()
+                crop_patch_slice = (slice(crop_r_start, crop_r_end), slice(crop_c_start, crop_c_end))
+                thisSize = (thisrowlen + 2*board + row_shift, thiscollen + 2*board + col_shift)
+
+                org_slice = (slice(thisrowstart, thisrowend), slice(thiscolstart, thiscolend))
+                # slice on a cooridinate of the original image
+
+                extract_slice = (slice(board + row_shift, board + thisrowlen + row_shift),
+                                 slice(board + col_shift, board + col_shift + thiscollen))
+                # extract on local coordinate of a patch
+
+                identifier =  identifier +1
+                PackList.append((crop_patch_slice,org_slice ,extract_slice, thisSize,identifier))
+
+                if thisSize in IndexDict:
+                   IndexDict[thisSize].append(identifier)
+                else:
+                   IndexDict[thisSize] = []
+                   IndexDict[thisSize].append(identifier)
     
     PackDict = {}
     for this_size in IndexDict.keys():
@@ -1062,7 +1058,7 @@ def split_img(img, windowsize=1000, board = 0, fixed_window = False, step_size =
             BatchData[idx,...] = pad_img[:,crop_patch_slice[0],crop_patch_slice[1]].copy()
             org_slice_list.append(PackList[iden][1])
             extract_slice_list.append(PackList[iden][2])
-        
+
         PackDict[this_size]= (BatchData,org_slice_list,extract_slice_list )
 
     return PackDict

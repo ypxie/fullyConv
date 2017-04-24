@@ -5,6 +5,13 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.nn as nn
 
+def multinomial(pred):
+    shape = pred.size()
+    valid_shape = list(pred.size())
+    valid_shape[-1] = 1
+    mat_action = pred.view(-1,shape[-1]).multinomial()
+    return mat_action.view(*valid_shape)
+
 def creteria_(pred, label):
     # both of them should be Tensor (N, dim)
     _, target = label.topk(1, dim=1)

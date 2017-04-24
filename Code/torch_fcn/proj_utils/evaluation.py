@@ -178,15 +178,26 @@ def get_segmentation(probmap=None, coordinates=None, thresh_seg= 0.5,tiny_size=1
     contours, infolist = seg_label2contour(final_label, returnImg=False)
     return  contours, infolist, final_label
 
-def seg_reward(res_seed, gt_seed, res_mask, gt_mask, seg_func,  radius):
+def get_seed(VotingMap, thresh, min_len):
+    VotingMap[VotingMap < thresh * np.max(VotingMap[:])] = 0
+
+    coordinates = peak_local_max(VotingMap, min_distance=min_len, indices=True)  # N by 2,
+    if coordinates.size == 0:
+        coordinates = np.asarray([])
+    return coordinates
+
+def seg_reward(res_seed_map, gt_seed_map, res_mask, gt_mask, det_thresh,min_len, radius):
     '''
     res_contours:
             a list of N*2 points
     gt_contours: 
             a list of N*2 points.
     '''
+    gt_seed = get_seed(gt_seed_map, det_thresh, min_len)
+    res_seed =  get_seed(res_seed_map, det_thresh, min_len)
+
     res_contorus, res_infolist, res_label = get_segmentation(res_mask, res_seed, thresh_seg, tiny_size)
-    gt_contorus, gt_infolist, gt_label  = get_segmentation(gt_mask, gt_seed, thresh_seg, tiny_size)
+    gt_contorus, gt_infolist, gt_label    = get_segmentation(gt_mask, gt_seed, thresh_seg, tiny_size)
 
     res_seeds = [np.mean(x, 0) for x in res_contours]
     gt_seeds =  [np.mean(x, 0) for x in gt_contours]

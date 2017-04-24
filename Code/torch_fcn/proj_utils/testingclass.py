@@ -8,7 +8,6 @@ from scipy import ndimage
 import scipy.io as sio
 from scipy.io import loadmat
 
-
 from  skimage.feature import peak_local_max
 from  skimage import data, color, io, img_as_float
 from timeit import default_timer as timer
@@ -17,6 +16,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 import deepdish as dd
+import shutil
 
 from .post_processing import *
 from .local_utils import *
@@ -50,6 +50,7 @@ class runtestImg(object):
         self.batch_size = 256
         self.resizeratio = 1
         self.test_type = 'fcn'
+        self.ol_folder = 'masked'
         self.testingInd = None
         self.steppool = [1]
         self.showseg = 0
@@ -76,15 +77,12 @@ class runtestImg(object):
         if len(VotingMap_list) == 1:
             VotingMap_list.append(VotingMap_list[0])
 
-        orgimg = imread(inputfile) if isinstance(inputfile, basestring) else inputfile
+        orgimg = imread(inputfile) if isinstance(inputfile, str) else inputfile
         if  model == None:
             model = self.model
         if len(orgimg.shape) == 2:
            orgimg =  orgimg.reshape(orgimg.shape[0],orgimg.shape[1],1)
         img = pre_process_img(orgimg, yuv = False).astype(np.float32)
-
-        BatchData = np.transpose(img, (2,0,1))
-
         thisprediction = self.split_testing(BatchData, model=model,  windowsize   = windowsize, 
                                             board = board, batch_size = batch_size, 
                                             fixed_window = fixed_window, 
@@ -102,16 +100,14 @@ class runtestImg(object):
                       fixed_window= False, step_size=None, adptive_batch_size=True, **kwargs):
         '''
         This function is used to do prediction for fcn and it's variation.
-        img should be of size (channel, row, col)
+        img should be of size (row, col,channel)
         '''
         assert len(img.shape) == 3, "Input image must be have three dimension"
+        img = np.transpose(img, (2, 0, 1))
         if model == None:
             model = self.model
         PatchDict = split_img(img, windowsize=windowsize, board = board, fixed_window= fixed_window,step_size=step_size)
-        if self.test_type == 'double_output':
-            output = [np.zeros(img.shape[1:]),np.zeros(img.shape[1:])]
-        elif self.test_type in [ 'dilated','fcn']:
-            output = [np.zeros(img.shape[1:])]
+        output = None
         all_keys = PatchDict.keys()
         for this_size in all_keys:
             #print(this_size)
@@ -128,6 +124,9 @@ class runtestImg(object):
                 raise Exception('Unknown prediction mode {}'.format(self.test_type))
             if type(thisprediction) != list:
                thisprediction = [thisprediction]
+            if output is None:
+                output = [np.zeros(img.shape[1:]) for _ in range(len(thisprediction))]
+
             for odx, pred in enumerate(thisprediction) :
                 for idx, _ in enumerate(org_slice_list):
                     org_slice = org_slice_list[idx]
@@ -136,7 +135,6 @@ class runtestImg(object):
         if len(output) == 1:
             output = output[0]
         return output
-    
     def get_coordinate(self, inputfile, model=None,windowsize = 1000, board = 40,fixed_window= False,step_size=None,
                        probmap=None, threshhold = 0.1, batch_size= 1,min_len=5, **kwargs):
         if probmap is None:
@@ -150,9 +148,9 @@ class runtestImg(object):
            coordinates = np.asarray([])
         return coordinates, probmap
 
-    def get_segmentation(self, inputfile=None, model=None, windowsize = 1000, board = 40,fixed_window= False,step_size=None,
+    def get_segmentation(self, inputfile=None, model=None, windowsize = 1000, board = 40,fixed_window= False,step_size=None, returnImg = True,
                          probmap=None, coordinates=None, thresh_seg= 0.5, batch_size= 1,get_contour=True,tiny_size=100, **kwargs):
-        if isinstance(inputfile, basestring):
+        if isinstance(inputfile, str):
            inputfile = imread(inputfile)
  
         if probmap is None:
@@ -160,6 +158,7 @@ class runtestImg(object):
                         batch_size= batch_size, fixed_window= fixed_window,step_size=step_size, **kwargs)
 
         seg_prob = probmap.copy()
+        
         label_img = overal_watershed(seg_prob, thresh_water = 0.5, thresh_seg = thresh_seg, 
                                      ratio = 0.3, dist_f = np.median, tiny_size=tiny_size)
         start = timer()
@@ -176,8 +175,7 @@ class runtestImg(object):
         #marker_map = np.zeros_like(seg_prob).astype(np.uint8)
         #marker_map[new_coord[:, 0], new_coord[:, 1]] = 1
         #label_img = overal_watershed_marker(label_img>0, marker_map, thresh_seg= thresh_seg)
-        contourMarkeredImg, contours = label2contour(final_label,org=inputfile, linewidth=3)
-        return contourMarkeredImg, contours
+        return label2contour(final_label,org=inputfile, linewidth=3,returnImg=returnImg)
 
     def runtesting(self, **params):
         
@@ -357,7 +355,7 @@ class runtestImg(object):
                                 localsegname = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len, self.resultmask) 
                                 localsegtime = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len, self.resultmask) + '_seg_time'
                                 marked_img, contours  = self.get_segmentation(inputfile=orgimg, probmap=VotingMap_seg, coordinates=coordinates, 
-                                                                            threshhold = seg_thresh)
+                                                                            threshhold = seg_thresh, returnImg = self.showseg)
 
                                 resultsDict[localsegname] = contours
                                 thisEnd = time.time()
@@ -381,7 +379,7 @@ class runtestImg(object):
         :param kwargs: 
         :return: 
         '''
-        if isinstance(inputfile, basestring):
+        if isinstance(inputfile, str):
            inputfile = imread(inputfile)
            img = pre_process_img(inputfile, yuv=False)
         else:
@@ -488,7 +486,7 @@ class runtestImg(object):
            im_masked.save(savepath)
         return overlaiedRes
 
-    def printMasks(self,ImgDir= None,ImgExt = None, eva_info= None, this_thresh = 0.15):
+    def printMasks(self,ImgDir= None,ImgExt = None, eva_info= None, threshhold = 0.15):
         if ImgExt is None:
             ImgExt = self.ImgExt
         if ImgDir is None:
@@ -505,7 +503,6 @@ class runtestImg(object):
 
         ol_folder = os.path.join(self.savefolder, self.ol_folder)
         if  os.path.exists(ol_folder):
-           #os.rmdir(ol_folder)
            shutil.rmtree(ol_folder)
         os.makedirs(ol_folder)
         for imgindx in range(0,len(imglist)):
@@ -524,7 +521,7 @@ class runtestImg(object):
             votingmapname  = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_vm'
             seg_map = resultsDict[votingmapname]
 
-            binary_map = (seg_map > np.max(seg_map) * this_thresh).astype(np.float32)
+            binary_map = (seg_map > np.max(seg_map) * threshhold).astype(np.float32)
             mask_org = process_mask_paramisum(binary_map)
 
             mask = np.asarray(process_mask_paramisum(mask_org), dtype = thisimg.dtype)

@@ -331,7 +331,7 @@ def train_blocks_double(params, args=None):
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
 
-    thisbatch = np.zeros((args.chunknum,args.patchsize, args.patchsize, args.img_channels))
+    thisbatch    = np.zeros((args.chunknum,args.patchsize, args.patchsize, args.img_channels))
     thisDetLabel = np.zeros((args.chunknum,args.patchsize, args.patchsize, args.label_channels))
     thisSegLabel = np.zeros((args.chunknum,args.patchsize, args.patchsize, args.label_channels))
 
@@ -340,7 +340,6 @@ def train_blocks_double(params, args=None):
     model_dict = {}
     steps, vals, det_vals, seg_vals = [], [], [], []
     for epochNumber in range(args.maxepoch):
-
         if np.mod(epochNumber+1, args.refershfreq) == 0 and epochNumber!=0:
             Matinfo = StruExtractor.getMatinfo_volume() #call this function to generate nece info
             datainfo = Matinfo['datainfo']
@@ -375,7 +374,6 @@ def train_blocks_double(params, args=None):
                 optimizer.zero_grad()
 
                 det_pred, seg_pred, value = strumodel(X_batch)
-
                 if args.use_weighted == 0:
                     det_loss  =  det_creteria(to_device(det_batch[:,0:-1,:,:], det_pred) ,det_pred)
                     seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], seg_pred) ,seg_pred)
@@ -387,17 +385,32 @@ def train_blocks_double(params, args=None):
                     seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], seg_pred) ,seg_pred)
                 
                 det_val = det_loss.data.cpu().numpy().mean()
-                seg_val = seg_loss.data.cpu().numpy().mean()
+                seg_val = seg_loss.data.cpu()\
+                    .numpy().mean()
                 alpha_ =  seg_val/det_val
                 #alpha_ = 1
                 total_loss = float(alpha_)*det_loss +  seg_loss
-                
 
-                if False: #args.use_reinforce:
-                    G = seg_reward()
+                if  args.use_reinforce:
+                    dou_seg = torch.cat([seg_pred[0,0], 1-seg_pred[0,0]], 2) # row*col*2
+                    res_action = multinomial(dou_seg).data   # row*col*1
+
+                    res_prob = torch.gather(seg_pred,2, res_action)[:,:,0]
+                    res_mask = res_action[:,:,0]
+
+                    gt_mask  = seg_batch[:,0,:,:]
+                    res_seed_map = det_pred
+                    gt_seed_map = det_batch[:,0,:,:]
+
+                    neg_dis, dsc = seg_reward(res_seed_map, gt_seed_map, res_mask, gt_mask,
+                                   det_thresh = 0.2,min_len= 5, radius = 8)
+                    G = neg_dis + dsc
+
                     advantage = G - value
                     value_loss = torch.mean(0.5 * advantage.pow(2))
-                    policy_loss = - torch.log(seg_pred) * Variable(advantage) - 0.01 * entropies[i]
+                    policy_loss = - torch.log(res_prob) * Variable(advantage)
+
+                    log_prob = log_prob.gather(1, Variable(action))
 
                     values.append(Variable(R))
                     policy_loss = 0
