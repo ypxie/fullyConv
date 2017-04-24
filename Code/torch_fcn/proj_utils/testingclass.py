@@ -21,13 +21,13 @@ import shutil
 from .post_processing import *
 from .local_utils import *
 
-def get_seed_name(step, threshhold, min_len, resultmask):
-        name  =( resultmask + '_s_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
+def get_seed_name(step, threshhold, min_len):
+        name  =('s_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
                  + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
         return name
 
-def get_seg_seed_name(step,threshhold,seg_thresh, min_len, resultmask):
-    name  =( resultmask + '_s_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
+def get_seg_seed_name(step,threshhold,seg_thresh, min_len):
+    name  =( 's_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
             +'_st_'   + '{:01.02f}'.format(seg_thresh) + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
     return name
     
@@ -206,8 +206,11 @@ class runtestImg(object):
                  orgimg =  orgimg.reshape(orgimg.shape[0],orgimg.shape[1],1)
                  orgimg = np.concatenate((orgimg,orgimg,orgimg),axis = 2)
             imgname = imagenamelist[imgindx]
-            resultDictPath = os.path.join(self.savefolder,  imgname + '_'+ self.resultmask + '.h5')
-            resultDictPath_mat = os.path.join(self.savefolder, imgname + '_'+ self.resultmask + '.mat')
+            #resultDictPath = os.path.join(self.savefolder,  imgname + '_'+ self.resultmask + '.h5')
+            #resultDictPath_mat = os.path.join(self.savefolder, imgname + '_'+ self.resultmask + '.mat')
+            resultDictPath = os.path.join(self.savefolder, imgname + '.h5')
+            resultDictPath_mat = os.path.join(self.savefolder, imgname + '.mat')
+
             if os.path.isfile(resultDictPath):
                resultsDict = dd.io.load(resultDictPath)
             else:
@@ -215,9 +218,9 @@ class runtestImg(object):
             orgRowSize , orgColSize = orgimg.shape[0], orgimg.shape[1]
             for step in self.steppool:
                 self.step = step
-                print('step is not used in fcn, if you want to use, please modify the folderTesting function. \n')
-                votingmapname    = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_vm'
-                voting_time_name = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_time'
+                #print('step is not used in fcn, if you want to use, please modify the folderTesting function. \n')
+                votingmapname    = 's_' + '{:02d}'.format(self.step) + '_vm'
+                voting_time_name = 's_' + '{:02d}'.format(self.step) + '_time'
                 if self.Probrefresh or votingmapname not in resultsDict.keys():
                    # first pad the image to make it dividable by the labelpatchsize
                     votingStarting_time = time.time()
@@ -238,9 +241,9 @@ class runtestImg(object):
                 for threshhold  in self.thresh_pool:
                     for min_len in self.lenpool:
                         thisStart = time.time()
-                        localseedname = get_seed_name(self.step, threshhold, min_len, self.resultmask)
+                        localseedname = get_seed_name(self.step, threshhold, min_len)
 
-                        localseedtime = get_seed_name(self.step, threshhold, min_len, self.resultmask) + '_time'
+                        localseedtime = get_seed_name(self.step, threshhold, min_len) + '_time'
 
                         if self.Seedrefresh or localseedname not in resultsDict.keys():
                            VotingMap[VotingMap < threshhold*np.max(VotingMap[:])] = 0
@@ -298,8 +301,8 @@ class runtestImg(object):
             for step in self.steppool:
                 self.step = step
                 print('step is not used in fcn, if you want to use, please modify the folderTesting function. \n')
-                votingmapname    = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_vm'
-                voting_time_name = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_time'
+                votingmapname    = 's_' + '{:02d}'.format(self.step) + '_vm'
+                voting_time_name = 's_' + '{:02d}'.format(self.step) + '_time'
                 if self.Probrefresh or votingmapname not in resultsDict.keys():
                    # first pad the image to make it dividable by the labelpatchsize
                     votingStarting_time = time.time()
@@ -334,7 +337,7 @@ class runtestImg(object):
                 for threshhold  in self.thresh_pool:
                     for min_len in self.lenpool:
                         thisStart = time.time()
-                        localseedname = get_seed_name(self.step, threshhold, min_len, self.resultmask)
+                        localseedname = get_seed_name(self.step, threshhold, min_len)
                         if self.Seedrefresh or localseedname not in resultsDict.keys():
                             VotingMap_det[VotingMap_det < threshhold*np.max(VotingMap_det[:])] = 0
 
@@ -352,8 +355,8 @@ class runtestImg(object):
                                     plt.plot(coordinates[:,1], coordinates[:,0], 'r.')
                                     plt.show()
                             for seg_thresh in self.seg_thresh_pool:        
-                                localsegname = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len, self.resultmask) 
-                                localsegtime = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len, self.resultmask) + '_seg_time'
+                                localsegname = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len)
+                                localsegtime = get_seg_seed_name(self.step, threshhold,seg_thresh, min_len) + '_seg_time'
                                 marked_img, contours  = self.get_segmentation(inputfile=orgimg, probmap=VotingMap_seg, coordinates=coordinates, 
                                                                             threshhold = seg_thresh, returnImg = self.showseg)
 
@@ -518,7 +521,7 @@ class runtestImg(object):
             resultDictPath = os.path.join(self.savefolder,imgname + '_'+ self.resultmask + '.h5')
             if os.path.isfile(resultDictPath):
                resultsDict = dd.io.load(resultDictPath)
-            votingmapname  = self.resultmask + '_s_' + '{:02d}'.format(self.step) + '_vm'
+            votingmapname  = 's_' + '{:02d}'.format(self.step) + '_vm'
             seg_map = resultsDict[votingmapname]
 
             binary_map = (seg_map > np.max(seg_map) * threshhold).astype(np.float32)
@@ -556,12 +559,12 @@ class runtestImg(object):
             imgname = imagenamelist[imgindx]
             savepath = os.path.join(ol_folder, imgname + '_ol.bmp' )
 
-            resultDictPath = os.path.join(self.savefolder,imgname + '_'+ self.resultmask + '.h5')
+            resultDictPath = os.path.join(self.savefolder, imgname +  '.h5')
             if os.path.isfile(resultDictPath):
                resultsDict = dd.io.load(resultDictPath)
             #votingmapname  = self.resultmask + '_s_' + '{:02d}'.format(step) + '_vm'
             #seg_map = resultsDict[votingmapname]
-            localseedname = get_seed_name(step, threshhold, min_len, self.resultmask )
+            localseedname = get_seed_name(step, threshhold, min_len)
             coordinates = resultsDict[localseedname]
             Return_masked = self.printCoord(Img = thisimg,  coordinates = coordinates, savepath = savepath, alpha = 0.85)
             if self.show:
@@ -590,7 +593,7 @@ class runtestImg(object):
             imgname = imagenamelist[imgindx]
             savepath = os.path.join(ol_folder, imgname + '_ol.bmp' )
 
-            resultDictPath = os.path.join(self.savefolder,imgname + '_'+ self.resultmask + '.h5')
+            resultDictPath = os.path.join(self.savefolder,imgname +  '.h5')
             print(resultDictPath)
             if os.path.isfile(resultDictPath):
                resultsDict = dd.io.load(resultDictPath)

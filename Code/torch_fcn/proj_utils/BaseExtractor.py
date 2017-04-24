@@ -150,7 +150,8 @@ class BaseExtractor(object):
         Allmixindx    = self.TrainingMatinfo['AllIndx'][thisRandIndx]
         uniqueImage,counts_ = np.unique(ALlimageGroup,return_counts=True)
         amount = 0
-        desir_shape = (max(counts_,) + thisbatch.shape[1:]
+        desir_shape = (max(counts_,)) + thisbatch.shape[1:]
+
         tmpdata  = np.zeros(desir_shape)
         tmplabel = np.zeros(desir_shape)
 

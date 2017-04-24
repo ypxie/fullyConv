@@ -3,36 +3,31 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import pairwise_distances
 from .testingclass import get_seed_name
-from .local_utils  import getfilelist
+from .local_utils  import getfilelist, imread, imshow
 import deepdish as dd
 from scipy.io import loadmat
 import json
-from numba import jit
+from numba import jit, autojit
+import matplotlib.pyplot as plt
 
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jun 16 23:56:41 2014
-@author: Edward
-"""
 import numpy as np
 from numpy.core.umath_tests import inner1d
 # A = np.array([[1,2],[3,4],[5,6],[7,8]])
 # B = np.array([[2,3],[4,5],[6,7],[8,9],[10,11]])
 
-def eval_imges(imgfolder = '.',radius = 8, resultmask = '', 
-               thresh_pool = [0.25], len_pool = [5],imgExt = '.tif',
-               savefolder = '.', contourname = 'Contours'):
+def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16, resultmask = '',
+               thresh_pool = [0.25], len_pool = [5],imgExt =['.tif'], contourname = 'Contours'):
     
     _, img_pool = getfilelist(imgfolder, imgExt)
     
     num_img, num_thresh, num_len = len(img_pool), len(thresh_pool), len(len_pool)
     
     pre_res = np.zeros((num_img, num_thresh, num_len)) 
-    rec_res = np.zeros((num_img, num_thresh, num_len)) 
-    f1_res  = np.zeros((num_img, num_thresh, num_len)) 
-    f1_res  = np.zeros((num_img, num_thresh, num_len)) 
+    rec_res = np.zeros((num_img, num_thresh, num_len))
+    f1_res  = np.zeros((num_img, num_thresh, num_len))
+    diff_res = np.zeros((num_img, num_thresh, num_len))
 
-    distance_res = [[None]*num_thresh]*num_len
+    distance_res = [[None]*num_len]*num_thresh
 
     res_json = {}
     save_path = os.path.join(savefolder, 'res.json')
@@ -41,29 +36,43 @@ def eval_imges(imgfolder = '.',radius = 8, resultmask = '',
         for len_idx, maxlen in enumerate(len_pool):
             distance_tmp = []
             for idx, imgname in enumerate(img_pool):
-                resultDictPath = os.path.join(savefolder,  imgname + '_' + resultmask + '.h5')
-                gtPath = os.path.join(imgfolder, imgname + '_' + 'withcontour.mat')
+                #resultDictPath = os.path.join(resfolder,  imgname + '_' + resultmask + '.h5')
+                resultDictPath = os.path.join(resfolder, imgname + '.h5')
+                gtPath = os.path.join(imgfolder, imgname + '_withcontour.mat')
                 
                 loaded_mt = loadmat(gtPath)
                 contour_mat = loaded_mt[contourname].tolist()[0]
-                seeds_list = [np.mean(a) for a in contour_mat]
-                gt = np.stack(seeds_list, 0) # (nsamples * 2)
-                
+                seeds_list = [np.mean(a,1) for a in contour_mat]
+                gt_xy = np.stack(seeds_list, 0) # (nsamples * 2)
+                gt = np.zeros_like(gt_xy)
+                gt[:,0] = gt_xy[:,1]
+                gt[:, 1] = gt_xy[:, 0]
                 resultDict = dd.io.load(resultDictPath)
-            
-                key_name = get_seed_name(1, thresh, maxlen, resultmask)
+
+                key_name = get_seed_name(1, thresh, maxlen)
                 thisresult = resultDict[key_name]
-                (pre, rec, f1), distance, difference = detect_eval(thisresult, gt, radius)
+
+                impath = os.path.join(imgfolder, imgname + '.jpg')
+                
+                (pre, rec, f1), distance, difference, (valid_res, valid_gt) = detect_eval(thisresult, gt, radius)
+                res_true = thisresult[valid_res]
+
+                #plt.figure('showres')
+                #plt.imshow(img)
+                #plt.plot(res_true[:, 1], res_true[:, 0], 'r.')
+                #plt.show()
+
                 pre_res[idx, th_idx, len_idx] = pre
                 rec_res[idx, th_idx, len_idx] = rec
                 f1_res[idx, th_idx, len_idx] = f1
+                diff_res[idx, th_idx, len_idx] = difference
                 distance_tmp.append(distance)
 
-            distance_cat = np.stack(distance_tmp, 0) # (nsamples * 2)
-            distance_res[th_idx, len_idx] = distance_cat
+            distance_cat = np.concatenate(distance_tmp) # (nsamples * 2)
+            distance_res[th_idx][len_idx] = distance_cat
             
-            dis_mean = np.mean(distance_res)
-            dis_std  = np.std(distance_res)
+            dis_mean = np.mean(distance_cat)
+            dis_std  = np.std(distance_cat)
             
             pre_mean = np.mean(pre_res[:,th_idx, len_idx])
             pre_std  = np.std(pre_res[:,th_idx, len_idx])
@@ -71,28 +80,34 @@ def eval_imges(imgfolder = '.',radius = 8, resultmask = '',
             rec_mean = np.mean(rec_res[:,th_idx, len_idx])
             rec_std  = np.std(rec_res[:,th_idx, len_idx])
 
+            diff_mean = np.mean(diff_res[:, th_idx, len_idx])
+            diff_std = np.std(diff_res[:, th_idx, len_idx])
+
             f1_mean = np.mean(f1_res[:,th_idx, len_idx])
             f1_std  = np.std(f1_res[:,th_idx, len_idx])
 
-            marker = 'th_{a}.len_{b}_'.format(a=thresh, b=maxlen)
-            res_json[marker+'f1_mean'] = f1_mean
-            res_json[marker+'f1_std']  = f1_std
+            marker = 'thresh_{a}_len_{b}_radius_{r}'.format(a=thresh, b=maxlen, r= radius)
 
-            res_json[marker+'rec_mean'] = rec_mean
-            res_json[marker+'rec_std']  = rec_std
+            res_json[marker]  = {
+                "f1_mean":f1_mean,
+                "f1_std":f1_std,
+                
+                "rec_mean":rec_mean,
+                "rec_std":rec_std,
+                
+                "pre_mean":pre_mean,
+                "pre_std":pre_std,
 
-            res_json[marker+'pre_mean'] = pre_mean
-            res_json[marker+'pre_std']  = pre_std
-            
-            res_json[marker+'pre_mean'] = pre_mean
-            res_json[marker+'pre_std']  = pre_std
+                "diff_mean":diff_mean,
+                "diff_std": diff_std,
 
-            res_json[marker+'dis_mean'] = dis_mean
-            res_json[marker+'dis_std']  = dis_std
+                "dis_mean":dis_mean,
+                "dis_std":dis_std
+            }
 
     with open(save_path, 'w') as outfile:
         json.dump(res_json, outfile)
-    print(res_json)       
+    
 
 def detect_eval(res, gt, radius):
     '''
@@ -111,14 +126,12 @@ def detect_eval(res, gt, radius):
     rec = float(TP)/(TP + FN)
     f1 = (2.0*pre*rec)/(pre+rec)
 
-    distance = []
-
-    matched_res = valid_row
-    matched_gt  = valid_col
+    matched_res = res[valid_row]
+    matched_gt  = gt[valid_col]
 
     difference = abs(num_det - num_gt)
-    distance = np.sqrt(np.sum((matched_gt - matched_res)**2, axis=1))
-    return (pre, rec, f1), distance, difference
+    distance = np.sqrt( np.sum(  (matched_gt - matched_res)**2, axis=1) )
+    return (pre, rec, f1), distance, difference, (valid_row, valid_col)
 
 def graph_match(res, gt, radius):
     '''
@@ -131,15 +144,16 @@ def graph_match(res, gt, radius):
     num_gt  = gt.shape[0]
 
     distmatrix = pairwise_distances(res, gt,metric = 'euclidean')
-    distmatrix[distmatrix > radius] = np.Inf
-    paddist = np.zeros(distmatrix.shape[0] + 1,distmatrix.shape[1] + 1)
-    paddist[0:num_det, 0:num_gt] = distmatrix
-    paddist[num_det,:] = 1e8
-    paddist[:,num_gt] = 1e8
+    #distmatrix[distmatrix > radius] = np.Inf
+    #paddist = np.zeros((distmatrix.shape[0] + 1,distmatrix.shape[1] + 1))
+    #paddist[0:num_det, 0:num_gt] = distmatrix
+    #paddist[num_det,:] = 1e8
+    #paddist[:,num_gt] = 1e8
     #the true positive is the one that does not choose boaders.
-    row_ind, col_ind = linear_sum_assignment(paddist)
-    
-    valid_mask = col_ind != num_gt and row_ind != num_det
+    row_ind, col_ind = linear_sum_assignment(distmatrix)
+
+    valid_mask = distmatrix[row_ind, col_ind] <= radius
+    #valid_mask = col_ind != num_gt and row_ind != num_det
     valid_col = col_ind[valid_mask]
     valid_row = row_ind[valid_mask]
     return valid_row, valid_col
@@ -228,8 +242,14 @@ def seg_reward(res_seed_map, gt_seed_map, res_mask, gt_mask, det_thresh,min_len,
                    
     return -mean(hsdist), mean(dsc_list)
 
+
+
 # Hausdorff Distance
 def HausdorffDist(A,B):
+    """
+    Created on Mon Jun 16 23:56:41 2014
+    @author: Edward
+    """
     # Hausdorf Distance: Compute the Hausdorff distance between two point
     # clouds.
     # Let A and B be subsets of metric space (Z,dZ),
@@ -253,6 +273,10 @@ def HausdorffDist(A,B):
     return(dH)
 
 def ModHausdorffDist(A,B):
+    """
+    Created on Mon Jun 16 23:56:41 2014
+    @author: Edward
+    """
     #This function computes the Modified Hausdorff Distance (MHD) which is
     #proven to function better than the directed HD as per Dubuisson et al.
     #in the following work:

@@ -9,7 +9,7 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(home,'DataSet', 'Nature', 'TrainingData')
+trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'TrainingData')
 modelroot = os.path.join(projroot, 'Data','Model', 'Nature')
 
 training_pool = np.array([
