@@ -14,7 +14,7 @@ from torch_fcn.Models import MultiContex_seg as build_model
 from torch_fcn.proj_utils.train_eng import train_blocks_double
 import torch.optim as optim
 
-def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_context=True,
+def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, 
                  show_progress=False, modelsubfolder = 'multicontex', parser=None):
     if parser is None:
         parser = argparse.ArgumentParser(description='Nature cell detection training')
@@ -53,15 +53,13 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
 
         parser.add_argument('--use_validation', action='store_false', default=False,
                             help='If use validation or not.')
-        parser.add_argument('--validfreq', type=int, default=10, metavar='N',
+        parser.add_argument('--valid_freq', type=int, default=10, metavar='N',
                             help='how many batches to wait before logging training status')
+
         parser.add_argument('--use_weighted', action='store_false', default=True,
                             help='If use validation or not.')
         parser.add_argument('--use_reinforce', action='store_false', default=False,
                             help='If use validation or not.')
-
-        parser.add_argument('--multi_context', action='store_false', default=multi_context,
-                            help='If use a multi context information or not.')
 
         # the following is for the data augmentation
         parser.add_argument('--number_repeat', type=int, default=2, metavar='N',
@@ -76,8 +74,7 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
 
     det_creteria = weighted_loss(base = 'mse')
     seg_creteria = dice
-    print("The multi_context setting is ", args.multi_context)
-    strumodel = build_model(multi_context = args.multi_context)
+    strumodel = build_model()
     if args.cuda:
         strumodel.cuda(device)
 
@@ -163,7 +160,5 @@ if __name__ == '__main__':
     trainingDataroot = os.path.join(home,'DataSet', 'FY_TMI', 'train')
     modelroot = os.path.join(projroot, 'Data','Model')
 
-    train_worker(trainingDataroot = trainingDataroot, trainingset= 'breast',device=1,  multi_context = True,
+    train_worker(trainingDataroot = trainingDataroot, trainingset= 'breast',
                  show_progress=True, modelroot=modelroot, modelsubfolder = 'multiout')
-    #train_worker(trainingDataroot=trainingDataroot, trainingset='breast', multi_context=False,
-    #             show_progress=True, modelroot=modelroot, modelsubfolder='multiout_no_multicont')

@@ -40,6 +40,8 @@ parser.add_argument('--thresh_pool', default = [0.25], help='pool of length to g
 parser.add_argument('--seg_thresh_pool', default = np.arange(0.05, 0.6, 0.1), help='pool of length to get local maxima.')
 
 parser.add_argument('--img_channels', type=int, default=3, metavar='N', help='Input image channel.')
+parser.add_argument('--multi_context', action='store_false', default= True,
+                            help='If use a multi context information or not.')
 
 args = parser.parse_args()
 
@@ -47,14 +49,17 @@ test_tuple = namedtuple('test', 'testingset ImgExt trainingset det_model_folder 
 
 testing = True
 device_id = 2
-det_model = build_model()
+det_model = build_model(multi_context = args.multi_context)
+
+modeltype = 'multiout' if args.multi_context else 'multiout_no_multicont'
+
 if args.cuda:
     det_model.cuda(device_id)
  
 if __name__ == "__main__":
     img_channels = 3
     testingpool = [ 
-                    test_tuple('breast', ['.tif'], 'breast', 'multiout' ,'weights.pth',  True, True)
+                    test_tuple('breast', ['.tif'], 'breast', modeltype ,'weights.pth',  True, True)
                   ]
     testingParam = {}
     testingParam['windowsize'] = 3000
@@ -89,6 +94,7 @@ if __name__ == "__main__":
         ModelDict = {}
 
         weights_dict = torch.load(det_weightspath)
+        print(det_weightspath)
         det_model.load_state_dict(weights_dict['weights'])# 12)
 
         classparams = {}

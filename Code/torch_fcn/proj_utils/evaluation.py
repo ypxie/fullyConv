@@ -17,7 +17,8 @@ from numpy.core.umath_tests import inner1d
 
 def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16, resultmask = '',
                thresh_pool = [0.25], len_pool = [5],imgExt =['.tif'], contourname = 'Contours'):
-    
+    #resultmask is just added for legency compatability
+
     _, img_pool = getfilelist(imgfolder, imgExt)
     
     num_img, num_thresh, num_len = len(img_pool), len(thresh_pool), len(len_pool)
@@ -36,10 +37,12 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
         for len_idx, maxlen in enumerate(len_pool):
             distance_tmp = []
             for idx, imgname in enumerate(img_pool):
-                #resultDictPath = os.path.join(resfolder,  imgname + '_' + resultmask + '.h5')
-                resultDictPath = os.path.join(resfolder, imgname + '.h5')
+                if resultmask is not  "":
+                    resultDictPath = os.path.join(resfolder, imgname + resultmask + '.h5')
+                else:
+                    resultDictPath = os.path.join(resfolder, imgname + '.h5')
+
                 gtPath = os.path.join(imgfolder, imgname + '_withcontour.mat')
-                
                 loaded_mt = loadmat(gtPath)
                 contour_mat = loaded_mt[contourname].tolist()[0]
                 seeds_list = [np.mean(a,1) for a in contour_mat]
@@ -49,7 +52,7 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
                 gt[:, 1] = gt_xy[:, 0]
                 resultDict = dd.io.load(resultDictPath)
 
-                key_name = get_seed_name(1, thresh, maxlen)
+                key_name = get_seed_name(1, thresh, maxlen, resultmask)
                 thisresult = resultDict[key_name]
 
                 impath = os.path.join(imgfolder, imgname + '.jpg')

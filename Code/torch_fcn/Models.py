@@ -8,11 +8,9 @@ import numpy as np
 def passthrough(x, **kwargs):
     return x
 
-def convAct(elu, nchan):
-    if elu:
-        return nn.ELU(inplace=True)
-    else:
-        return nn.PReLU(nchan)
+def convAct(nchan):
+    return nn.PReLU(nchan)
+    #return nn.ELU(inplace=True)
 
 # normalization between sub-volumes is necessary
 # for good performance
@@ -29,12 +27,12 @@ class ContBatchNorm2d(nn.modules.batchnorm._BatchNorm):
             input, self.running_mean, self.running_var, self.weight, self.bias,
             True, self.momentum, self.eps)
 
-class LUConv(nn.Module):
-    def __init__(self, nchan, elu, inChans=None):
-        super(LUConv, self).__init__()
+class ConvBN(nn.Module):
+    def __init__(self, nchan, inChans=None):
+        super(ConvBN, self).__init__()
         if inChans is None:
             inChans = nchan
-        self.act = convAct(elu, inChans)
+        self.act = convAct(nchan)
         self.conv = nn.Conv2d(inChans, nchan, kernel_size=3, padding=1)
         self.bn = ContBatchNorm2d(nchan)
 
@@ -42,26 +40,25 @@ class LUConv(nn.Module):
         out = self.act(self.bn(self.conv(x)))
         return out
 
-def _make_nConv(nchan, depth, elu):
+def _make_nConv(nchan, depth):
     layers = []
     if depth >=0:
         for _ in range(depth):
-            layers.append(LUConv(nchan, elu))
+            layers.append(ConvBN(nchan))
         return nn.Sequential(*layers)
     else:
         return passthrough
 
 class InputTransition(nn.Module):
-    def __init__(self,inputChans, outChans, elu):
+    def __init__(self,inputChans, outChans):
         self.outChans = outChans
         self.inputChans = inputChans
         super(InputTransition, self).__init__()
         self.conv = nn.Conv2d(inputChans, outChans, kernel_size=3, padding=1)
         self.bn = ContBatchNorm2d(outChans)
-        self.relu = convAct(elu, outChans)
+        self.relu = convAct(outChans)
 
     def forward(self, x):
-        # do we want a PRELU here as well?
         out = self.bn(self.conv(x))
         # split input in to 16 channels
         if self.inputChans == 1:
@@ -72,18 +69,18 @@ class InputTransition(nn.Module):
         return out
 
 class DownTransition(nn.Module):
-    def __init__(self, inChans, outChans, nConvs, elu, dropout=False):
+    def __init__(self, inChans, outChans, nConvs, dropout=False):
         super(DownTransition, self).__init__()
         #outChans = 2*inChans
         self.down_conv = nn.Conv2d(inChans, outChans, kernel_size=3, padding=1, stride=2)
         self.bn1 = ContBatchNorm2d(outChans)
         self.do1 = passthrough
-        self.relu1 = convAct(elu, outChans)
-        self.relu2 = convAct(elu, outChans)
+        self.relu1 = convAct(outChans)
+        self.relu2 = convAct(outChans)
         if dropout:
             self.do1 = nn.Dropout2d()
         
-        self.ops = _make_nConv(outChans, nConvs, elu)
+        self.ops = _make_nConv(outChans, nConvs)
 
     def forward(self, x):
         down = self.relu1(self.bn1(self.down_conv(x)))
@@ -123,7 +120,7 @@ def match_tensor(out, refer_shape):
 
 
 class UpConcat(nn.Module):
-    def __init__(self, inChans, hidChans, outChans, nConvs, elu, dropout=False,stride=2):
+    def __init__(self, inChans, hidChans, outChans, nConvs, dropout=False,stride=2):
         # remeber inChans is mapped to hidChans, then concate together with skipx, the mixed channel =outChans
         super(UpConcat, self).__init__()
         #hidChans = outChans // 2
@@ -132,12 +129,12 @@ class UpConcat(nn.Module):
         self.bn1 = ContBatchNorm2d(hidChans)
         self.do1 = passthrough
         self.do2 = nn.Dropout2d()
-        self.relu1 = convAct(elu, hidChans)
-        self.relu2 = convAct(elu, outChans)
+        self.relu1 = convAct(hidChans)
+        self.relu2 = convAct(outChans)
         if dropout:
             self.do1 = nn.Dropout2d()
         
-        self.ops = _make_nConv(outChans, nConvs, elu)
+        self.ops = _make_nConv(outChans, nConvs)
 
     def forward(self, x, skipx):
         out = self.do1(x)
@@ -151,14 +148,14 @@ class UpConcat(nn.Module):
         return out
 
 class UpConv(nn.Module):
-    def __init__(self, inChans, outChans, nConvs, elu, dropout=False, stride = 2):
+    def __init__(self, inChans, outChans, nConvs,dropout=False, stride = 2):
         super(UpConv, self).__init__()
         #hidChans = outChans // 2
         self.up_conv = nn.ConvTranspose2d(inChans, outChans, kernel_size=3, 
                                           padding=1, stride = stride, output_padding=1)
         self.bn1 = ContBatchNorm2d(outChans)
         self.do1 = passthrough
-        self.relu1 = convAct(elu, outChans)
+        self.relu1 = convAct(outChans)
         if dropout:
             self.do1 = nn.Dropout2d()
 
@@ -172,11 +169,11 @@ class UpConv(nn.Module):
         return out
 
 class OutputTransition(nn.Module):
-    def __init__(self, inChans,outChans=1,hidChans=2, elu=True):
+    def __init__(self, inChans,outChans=1,hidChans=2):
         super(OutputTransition, self).__init__()
         self.conv1 = nn.Conv2d(inChans, hidChans, kernel_size=5, padding=2)
-        self.bn1 = ContBatchNorm2d(hidChans)
-        self.relu1 = convAct(elu, hidChans)
+        self.bn1   = ContBatchNorm2d(hidChans)
+        self.relu1 = convAct( hidChans)
         self.conv2 = nn.Conv2d(hidChans, outChans, kernel_size=1)
 
     def forward(self, x):
@@ -191,62 +188,27 @@ class OutputTransition(nn.Module):
         #treat channel 0 as the predicted output
         return out
 
-class VNet(nn.Module):
-    # the number of convolutions in each layer corresponds
-    # to what is in the actual prototxt, not the intent
-    def __init__(self, elu=True, nll=False):
-        super(VNet, self).__init__()
-        self.register_buffer('device_id', torch.zeros(1))
-        self.in_tr_100     = InputTransition(3, 16, elu) 
-        self.down_tr32_50  = DownTransition(16, 32, 1, elu)
-        self.down_tr64_25  = DownTransition(32, 64, 2, elu)
-        self.down_tr128_12 = DownTransition(64, 128, 2, elu, dropout=True)
-        self.down_tr256_6  = DownTransition(128, 256,  2, elu, dropout=True)
-        self.up_tr256_12   = UpConcat(256, 128, 256, 2, elu, dropout=True)
-        self.up_tr128_25   = UpConcat(256, 64, 128, 2, elu, dropout=True)
-        self.up_tr64_50    = UpConcat(128, 32, 64, 1, elu)
-        self.up_tr32_100   = UpConcat(64,  16, 32, 1, elu)
-        self.out_tr        = OutputTransition(32, 1,2, elu)
-
-    def forward(self, x):
-        x = to_device(x,self.device_id)
-        out16 = self.in_tr_100(x)
-        out32 = self.down_tr32_50(out16)
-        out64 = self.down_tr64_25(out32)
-        out128 = self.down_tr128_12(out64)
-        out256 = self.down_tr256_6(out128)
-        out = self.up_tr256_12(out256, out128)
-        out = self.up_tr128_25(out, out64)
-        out = self.up_tr64_50(out, out32)
-        out = self.up_tr32_100(out, out16)
-        out = self.out_tr(out)
-        return out
-    def predict(self, x):
-        self.eval()
-        x = to_device(x,self.device_id)
-        return self.forward(x)
-
 class MultiContex(nn.Module):
     # the number of convolutions in each layer corresponds
     # to what is in the actual prototxt, not the intent
-    def __init__(self, elu=True, nll=False):
+    def __init__(self, nll=False):
         super(MultiContex, self).__init__()
         self.register_buffer('device_id', torch.zeros(1))
-        self.in_tr_100     = InputTransition(3, 16, elu) 
-        self.down_tr32_50  = DownTransition(16, 32, 1, elu)
-        self.down_tr64_25  = DownTransition(32, 64, 2, elu)
-        self.down_tr128_12 = DownTransition(64, 128, 2, elu, dropout=True)
-        self.down_tr256_6  = DownTransition(128, 256,  2, elu, dropout=True)
+        self.in_tr_100     = InputTransition(3, 16) 
+        self.down_tr32_50  = DownTransition(16, 32, 1)
+        self.down_tr64_25  = DownTransition(32, 64, 2)
+        self.down_tr128_12 = DownTransition(64, 128, 2,dropout=True)
+        self.down_tr256_6  = DownTransition(128, 256,  2,dropout=True)
 
-        self.up_tr256_12   = UpConcat(256, 128, 256, 2, elu, dropout=True)
-        self.up_tr128_25   = UpConcat(256, 64, 128, 2, elu, dropout=True)
-        self.up_tr64_50    = UpConcat(128, 32, 64, 1, elu)
-        self.up_tr32_100   = UpConcat(64,  16, 32, 1, elu)
+        self.up_tr256_12   = UpConcat(256, 128, 256, 2,  dropout=True)
+        self.up_tr128_25   = UpConcat(256, 64, 128, 2, dropout=True)
+        self.up_tr64_50    = UpConcat(128, 32, 64, 1)
+        self.up_tr32_100   = UpConcat(64,  16, 32, 1)
        
-        self.up_12_100   = UpConv(256, 32, 2, elu, stride = 8)
-        self.up_25_100   = UpConv(128,  32, 2, elu, stride = 4)
+        self.up_12_100   = UpConv(256, 32, 2, stride = 8)
+        self.up_25_100   = UpConv(128,  32, 2, stride = 4)
         
-        self.out_tr      = OutputTransition(32*3, 1, 2, elu)
+        self.out_tr      = OutputTransition(32*3, 1, 2)
 
     def forward(self, x):
         x = to_device(x,self.device_id)
@@ -268,51 +230,58 @@ class MultiContex(nn.Module):
         out = self.out_tr(out)
         return out
 
-    def predict(self, x, batch_size=None):
+    def predict(self, batch_data, batch_size=None):
         self.eval()
-        x = to_device(x,self.device_id).float()
-        total_num = x.size()[0]
-        if batch_size is None or batch_size <= total_num:
+        total_num = batch_data.shape[0]
+        if batch_size is None or batch_size >= total_num:
+            x = to_device(batch_data, self.device_id, False).float()
             return self.forward(x).cpu().data.numpy()
         else:
             results = []
             for ind in Indexflow(total_num, batch_size, False):
-                devInd = to_device(torch.from_numpy(ind), self.device_id, False)
-                data = x[devInd]
+                data = batch_data[ind]
+                data = to_device(data, self.device_id, False).float()
                 results.append(self.forward(data).cpu().data.numpy())
             return np.concatenate(results,axis=0)
 
 class MultiContex_seg(nn.Module):
     # the number of convolutions in each layer corresponds
     # to what is in the actual prototxt, not the intent
-    def __init__(self, elu=True, nll=False):
+    def __init__(self, multi_context=True):
         super(MultiContex_seg, self).__init__()
+        self.multi_context = multi_context
         self.register_buffer('device_id', torch.zeros(1))
-        self.in_tr_100     = InputTransition(3, 16, elu) 
-        self.down_tr32_50  = DownTransition(16, 32, 1, elu)
-        self.down_tr64_25  = DownTransition(32, 64, 2, elu)
-        self.down_tr128_12 = DownTransition(64, 128, 2, elu, dropout=True)
-        self.down_tr256_6  = DownTransition(128, 128,  2, elu, dropout=True)
+        self.in_tr_100     = InputTransition(3, 16) 
+        self.down_tr32_50  = DownTransition(16, 32, 1)
+        self.down_tr64_25  = DownTransition(32, 64, 2)
+        self.down_tr128_12 = DownTransition(64, 128, 2,dropout=True)
+        self.down_tr256_6  = DownTransition(128, 128,  2, dropout=True)
 
-        self.up_tr256_12   = UpConcat(128, 128, 256, 2, elu, dropout=True)
-        self.up_tr128_25   = UpConcat(256, 64, 128, 2, elu, dropout=True)
-        self.up_tr64_50    = UpConcat(128, 32, 64, 1, elu)
-        self.up_tr32_100   = UpConcat(64,  16, 32, 1, elu)
+        self.up_tr256_12   = UpConcat(128, 128, 256, 2,  dropout=True)
+        self.up_tr128_25   = UpConcat(256, 64, 128, 2,  dropout=True)
+        self.up_tr64_50    = UpConcat(128, 32, 64, 1)
+        self.up_tr32_100   = UpConcat(64,  16, 32, 1)
 
-        self.up_12_100   = UpConv(256, 32, 2, elu, stride = 8)
-        self.up_25_100   = UpConv(128,  32, 2, elu, stride = 4)
+        if self.multi_context:
+            self.up_12_100   = UpConv(256, 32, 2,  stride = 8)
+            self.up_25_100   = UpConv(128,  32, 2, stride = 4)
 
-        self.det_tran  = LUConv(32*2, elu, inChans=32*3)
-        self.det_hid   = _make_nConv(32*2, 2, elu)
-        self.det_out   = OutputTransition(32*2, 1, 2, elu)
-        
-        self.seg_tran  = LUConv(32*2, elu, inChans=32*3)
-        self.seg_hid   = _make_nConv(32*2, 2, elu)
-        self.seg_out   = OutputTransition(32*2, 1, 2, elu)
+            self.det_tran  = ConvBN(32*2, inChans=32*3)
+            self.seg_tran  = ConvBN(32*2, inChans=32*3)
+            self.adv_tran  = ConvBN(32*2, inChans=32*3)
+        else:
+            self.det_tran = ConvBN(32 * 2, inChans=32)
+            self.seg_tran = ConvBN(32 * 2, inChans=32)
+            self.adv_tran = ConvBN(32 * 2, inChans=32)
 
-        self.adv_tran  = LUConv(32*2, elu, inChans=32*3)
-        self.adv_hid   = _make_nConv(32*2, 2, elu)
-        self.adv_out   = OutputTransition(32*2, 1, 2, elu)
+        self.det_hid = _make_nConv(32 * 2, 2)
+        self.det_out = OutputTransition(32 * 2, 1, 2)
+
+        self.seg_hid = _make_nConv(32 * 2, 2)
+        self.seg_out = OutputTransition(32 * 2, 1, 2)
+
+        self.adv_hid = _make_nConv(32 * 2, 2)
+        self.adv_out = OutputTransition(32 * 2, 1, 2)
 
         #self.dense_mean = nn.Linear(32*3, 128)
         #self.dense_adv  = nn.Linear(128, 1)
@@ -331,10 +300,13 @@ class MultiContex_seg(nn.Module):
         out_up_50 = self.up_tr64_50(out_up_25, out32_50)
 
         out_up_50_100 = self.up_tr32_100(out_up_50, out16)
-        out_up_12_100 = self.up_12_100(out_up_12, x.size()[2:])
-        out_up_25_100 = self.up_25_100(out_up_25, x.size()[2:])
 
-        concat_out = torch.cat([out_up_50_100,out_up_25_100, out_up_12_100 ], 1)
+        if self.multi_context:
+            out_up_12_100 = self.up_12_100(out_up_12, x.size()[2:])
+            out_up_25_100 = self.up_25_100(out_up_25, x.size()[2:])
+            concat_out = torch.cat([out_up_50_100,out_up_25_100, out_up_12_100 ], 1)
+        else:
+            concat_out = out_up_50_100
 
         det_tran = self.det_tran(concat_out)
         det_hid  = self.det_hid(det_tran)
@@ -356,12 +328,11 @@ class MultiContex_seg(nn.Module):
 
         return det_out, seg_out, adv_out
 
-
     def predict(self, x, batch_size=None):
         self.eval()
-        x = to_device(x,self.device_id).float()
-        total_num = x.size()[0]
-        if batch_size is None or batch_size <= total_num:
+        total_num = x.shape[0]
+        if batch_size is None or batch_size >= total_num:
+            x = to_device(x, self.device_id).float()
             det, seg, _ = self.forward(x, adv=False)
             return [det.cpu().data.numpy(),seg.cpu().data.numpy()] #,adv.cpu().data.numpy(),
         else:
@@ -369,8 +340,11 @@ class MultiContex_seg(nn.Module):
             seg_results = []
             #advs = []
             for ind in Indexflow(total_num, batch_size, False):
-                devInd = to_device(torch.from_numpy(ind), self.device_id, False)
-                data = x[devInd]
+                #devInd = to_device(torch.from_numpy(ind), self.device_id, False)
+                #Ind = torch.from_numpy(ind)
+                data = x[ind]
+                data = to_device(data, self.device_id, False).float()
+
                 det, seg, adv = self.forward(data)
                 det_results.append(det.cpu().data.numpy())
                 seg_results.append(seg.cpu().data.numpy())

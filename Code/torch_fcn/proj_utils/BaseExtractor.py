@@ -150,13 +150,14 @@ class BaseExtractor(object):
         Allmixindx    = self.TrainingMatinfo['AllIndx'][thisRandIndx]
         uniqueImage,counts_ = np.unique(ALlimageGroup,return_counts=True)
         amount = 0
-        desir_shape = (max(counts_,)) + thisbatch.shape[1:]
+        #desir_shape = (max(counts_),) + thisbatch.shape[1:]
+        tmpdata  = np.zeros((max(counts_),) + thisbatch.shape[1:] )
 
-        tmpdata  = np.zeros(desir_shape)
-        tmplabel = np.zeros(desir_shape)
+        tmplabel = np.zeros((max(counts_),) + thislabel.shape[1:])
 
         if self.double_output:
-            tmpsecondlabel = np.zeros((max(counts_), secondlabel.shape[1]))
+            tmpsecondlabel =  np.zeros((max(counts_),) + secondlabel.shape[1:])
+            #np.zeros((max(counts_), *(secondlabel.shape[1::])))
         
         for uniIdx in range(len(uniqueImage)):
             thisimg = uniqueImage[uniIdx]
@@ -171,9 +172,8 @@ class BaseExtractor(object):
             thislabel[thisorderIdind] = tmplabel[0:len(thisorderIdind)].copy()
             if self.double_output:
                 second_img = self.TrainingMatinfo['ImgContainer'][(thisimg,2)]
-                tmpsecondlabel = np.zeros((max(counts_), secondlabel.shape[1])) 
-                self.__Points2Patches(tmpsecondlabel, thisImgind, second_img, [self.labelpatchsize, self.labelpatchsize])
-                secondlabel[thisorderIdind] = tmpsecondlabel.copy()
+                self.__Points2Patches(tmpsecondlabel[0:len(thisorderIdind)], thisImgind, second_img, [self.labelpatchsize, self.labelpatchsize])
+                secondlabel[thisorderIdind] = tmpsecondlabel[0:len(thisorderIdind)].copy()
             
             """Patches should be pre allocated to save computational time"""
             amount += len(thisImgind)

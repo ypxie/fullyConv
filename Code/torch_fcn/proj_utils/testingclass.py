@@ -21,18 +21,22 @@ import shutil
 from .post_processing import *
 from .local_utils import *
 
-def get_seed_name(step, threshhold, min_len):
-        name  =('s_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
-                 + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
-        return name
+def get_seed_name(step, threshhold, min_len, resultmask=""):
+    if resultmask is not '':
+        resultmask = resultmask + '_'
+    name  =(resultmask + 's_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
+             + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
+    return name
 
-def get_seg_seed_name(step,threshhold,seg_thresh, min_len):
-    name  =( 's_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
+def get_seg_seed_name(step,threshhold,seg_thresh, min_len,resultmask=""):
+    if resultmask is not '':
+        resultmask = resultmask + '_'
+    name  =(resultmask + 's_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
             +'_st_'   + '{:01.02f}'.format(seg_thresh) + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
     return name
     
 class runtestImg(object):
-    def __init__(self, kwargs):
+    def __init__(self, **kwargs):
         self.ImgDir = ''
         self.savefolder = ''
         self.ImgExt = ['.jpg']
@@ -222,7 +226,7 @@ class runtestImg(object):
                 votingmapname    = 's_' + '{:02d}'.format(self.step) + '_vm'
                 voting_time_name = 's_' + '{:02d}'.format(self.step) + '_time'
                 if self.Probrefresh or votingmapname not in resultsDict.keys():
-                   # first pad the image to make it dividable by the labelpatchsize
+                    # first pad the image to make it dividable by the labelpatchsize
                     votingStarting_time = time.time()
                     img = pre_process_img(orgimg, yuv = False)
 

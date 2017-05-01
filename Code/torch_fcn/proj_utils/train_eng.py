@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# haha
 import numpy as np
 import os
 import sys
@@ -55,14 +56,14 @@ def get_validation(validation_params, img_channels=3, label_channels = 1):
     validationMatinfo = validation_extractor.getMatinfo_volume()
     datainfo = validationMatinfo['datainfo']
     Totalnum = datainfo['Totalnum']
-    valid_batch = np.zeros((Totalnum, datainfo['inputdim']))
-    valid_label = np.zeros((Totalnum, datainfo['outputdim']))
+    valid_batch = np.zeros((Totalnum, vpsize, vpsize, validation_params['channel']))
+    valid_label = np.zeros((Totalnum, lvpsize, lvpsize, validation_params['label_channel']))
+
     validation_extractor.getOneDataBatch_stru(np.arange(Totalnum), thisbatch=valid_batch, thislabel=valid_label)
-    
-    valid_batch = np.reshape(valid_batch, (-1,vpsize, vpsize, validation_params['channel'] ))
-    valid_label = np.reshape(valid_label, (-1,lvpsize,lvpsize, validation_params['label_channel']  ))
+
     valid_label = np.transpose(valid_label, (0, 3,1,2))
     valid_batch = np.transpose(valid_batch, (0, 3,1,2))
+
     del validationMatinfo
     return valid_batch, valid_label
 
@@ -79,10 +80,8 @@ def train_blocks(params, args=None):
 
     best_score = params['best_score']
     tolerance  = params['tolerance']
-    worseratio = 3 #params['worseratio']
-    
+    worseratio = params['worseratio']
     classparams = params['classparams']
-    
     # params for data augmentation
     number_repeat       = getattr(args, 'number_repeat', 1)
     elastic             = getattr(args, 'elastic', 1)
@@ -101,9 +100,10 @@ def train_blocks(params, args=None):
     if args.use_validation:
         validation_params = params.get("validation_params", None)
         validation_batch_size = params.get('validation_batch_size',4)
-        print('start getting validation images.')
+        print('Start getting validation images.')
         valid_batch, valid_label = get_validation(validation_params, args.img_channels, args.label_channels)
-    
+        print('Finish getting validation images.')
+
     mydata_genrator = ImageDataGenerator(featurewise_center=False,
                                     samplewise_center=False,
                                     featurewise_std_normalization=False,
@@ -141,7 +141,7 @@ def train_blocks(params, args=None):
         if os.path.exists(best_weightspath):
             best_weights_dict = torch.load(best_weightspath)
             best_score = best_weights_dict.get('acc_score', 0)
-            strumodel.load_state_dict(best_weights_dict['weights'])# 12)
+            strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
             print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
         elif os.path.exists(weightspath):
             print(weightspath)
@@ -213,18 +213,18 @@ def train_blocks(params, args=None):
 
             progbar.add(BatchData.shape[0]*args.number_repeat, values = [("train loss", loss.cpu().data.numpy())])
 
-            if np.mod(chunkidx, args.savefre) == 0 or chunkidx == total_chunks:
-                chunkidx = 0
-                if args.use_validation:
-                    valid_pred = strumodel.predict(valid_batch)
+            if np.mod(batch_count, args.savefre) == 0:
+                if args.use_validation and np.mod(batch_count, args.validfreq) == 0:
+                    valid_pred = strumodel.predict(valid_batch, batch_size = args.batch_size)
                     if args.use_weighted == 0:
-                        valid_loss  =  creteria(to_device(valid_label[:,0:-1,:,:], valid_pred), valid_pred)
+                        valid_loss  =  creteria(to_device(valid_label[:,0:-1,:,:], strumodel.device_id, var =False), 
+                                                to_device(valid_pred, strumodel.device_id, var =False))
                     else:
-                        valid_mask = get_wight_mask(valid_label, weight_params)
-                        valid_loss  =  creteria(to_device(valid_mask, valid_pred), valid_pred)
+                        valid_mask  = get_wight_mask(valid_label, weight_params)
+                        valid_loss  =  creteria(to_device(valid_mask, strumodel.device_id, var =False), 
+                                                to_device(valid_pred, strumodel.device_id, var =False))
                         
-                    valid_loss = np.mean(valid_loss.data.cpu().numpy())
-
+                    #valid_loss = valid_loss
                     print('\nTesting loss: {}, best_score: {}'.format(valid_loss, best_score))
                     if valid_loss <=  best_score:
                         best_score = valid_loss
@@ -240,10 +240,15 @@ def train_blocks(params, args=None):
                             print('weights have been reset to best_weights!')
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
+		    
                     torch.save(model_dict, best_weightspath)
+                    print('Save weights to: ', best_weightspath)
+                # save model anyway.
+                model_dict['weights'] = strumodel.state_dict()
+                torch.save(model_dict, weightspath)
 
-            model_dict['weights'] = strumodel.state_dict()
-            torch.save(model_dict, weightspath)
+        model_dict['weights'] = strumodel.state_dict()
+        torch.save(model_dict, weightspath)
 
 
 def train_blocks_double(params, args=None):
@@ -259,7 +264,7 @@ def train_blocks_double(params, args=None):
 
     best_score = params['best_score']
     tolerance  = params['tolerance']
-    worseratio = 3 #params['worseratio']
+    worseratio = params['worseratio']
     
     classparams = params['classparams']
     
@@ -283,7 +288,8 @@ def train_blocks_double(params, args=None):
         validation_batch_size = params.get('validation_batch_size',4)
         print('start getting validation images.')
         valid_batch, valid_det_label,valid_seg_label = get_validation(validation_params, args.img_channels, args.label_channels)
-    
+        print('Finish getting validation images.')
+
     mydata_genrator = ImageDataGenerator(featurewise_center=False,
                                     samplewise_center=False,
                                     featurewise_std_normalization=False,
@@ -375,18 +381,21 @@ def train_blocks_double(params, args=None):
 
                 det_pred, seg_pred, value = strumodel(X_batch)
                 if args.use_weighted == 0:
-                    det_loss  =  det_creteria(to_device(det_batch[:,0:-1,:,:], det_pred) ,det_pred)
-                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], seg_pred) ,seg_pred)
+                    det_loss  =  det_creteria(to_device(det_batch[:,0:-1,:,:], strumodel.device_id, var =False) ,
+                                              to_device(det_pred,strumodel.device_id, var =False))
+                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id, var =False),
+                                              to_device(seg_pred,strumodel.device_id, var =False))
                 else:
                     #we dont use weight mask for segmentation
                     det_batch = get_wight_mask(det_batch, weight_params)
                     
-                    det_loss  =  det_creteria(to_device(det_batch, det_pred) ,det_pred)
-                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], seg_pred) ,seg_pred)
+                    det_loss  =  det_creteria(to_device(det_batch, strumodel.device_id, var =False),
+                                              to_device(det_pred,strumodel.device_id, var =False))
+                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id, var =False),
+                                              to_device(seg_pred,strumodel.device_id, var =False))
                 
                 det_val = det_loss.data.cpu().numpy().mean()
-                seg_val = seg_loss.data.cpu()\
-                    .numpy().mean()
+                seg_val = seg_loss.data.cpu().numpy().mean()
                 alpha_ =  seg_val/det_val
                 #alpha_ = 1
                 total_loss = float(alpha_)*det_loss +  seg_loss
@@ -435,8 +444,6 @@ def train_blocks_double(params, args=None):
                     (policy_loss + 0.5 * value_loss).backward()
                     torch.nn.utils.clip_grad_norm(model.parameters(), 40)
 
-
-
                 loss_val = total_loss.data.cpu().numpy().mean()
                 assert not np.isnan(loss_val) ,"nan error"
                 steps.append(batch_count)
@@ -463,24 +470,23 @@ def train_blocks_double(params, args=None):
 
             progbar.add(BatchData.shape[0]*args.number_repeat, values = [("train loss", loss_val)])
 
-            if np.mod(chunkidx, args.savefre) == 0 or chunkidx == total_chunks:
-                chunkidx = 0
-                if args.use_validation:
-                    valid_det_pred, valid_seg_pred, valid_adv = strumodel(valid_batch)
+            if np.mod(batch_count, args.savefre) == 0:
+                if args.use_validation and np.mod(batch_count, args.validfreq) == 0:
+                    valid_det_pred, valid_seg_pred, valid_adv = strumodel.predict(valid_batch, batch_size = args.batch_size)
                     if args.use_weighted == 0:
-                        valid_det_loss  =  det_creteria(to_device(valid_det_batch[:,0:-1,:,:], valid_det_pred) ,valid_det_pred)
-                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_batch[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
+                        valid_det_loss  =  det_creteria(to_device(valid_det_label[:,0:-1,:,:], valid_det_pred) ,valid_det_pred)
+                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
                     else:
                         #we dont use weight mask for segmentation
-                        valid_det_batch = get_wight_mask(valid_det_batch, weight_params)
+                        valid_det_label = get_wight_mask(valid_det_label, weight_params)
 
-                        valid_det_loss  =  det_creteria(to_device(valid_det_batch, pred) ,pred)
-                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_batch[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
+                        valid_det_loss  =  det_creteria(to_device(valid_det_label, pred) ,pred)
+                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
 
                     valid_total_loss = valid_det_loss +  valid_seg_loss
 
-                    valid_loss = valid_total_loss.data.cpu().numpy().mean()
-
+                   # valid_loss = valid_total_loss.data.cpu().numpy().mean()
+                    valid_loss = valid_total_loss
                     print('\nTesting loss: {}, best_score: {}'.format(valid_loss, best_score))
                     if valid_loss <=  best_score:
                         best_score = valid_loss
@@ -499,10 +505,11 @@ def train_blocks_double(params, args=None):
                     torch.save(model_dict, best_weightspath)
                 
                 model_dict['weights'] = strumodel.state_dict()
-                torch.save(model_dict, weightspath)     
+                torch.save(model_dict, weightspath)
+                print('Save weights to: ', weightspath )
+
             model_dict['weights'] = strumodel.state_dict()
             torch.save(model_dict, weightspath)
-
 
 def display_loss(steps, values, plot=None, name='default', legend= None):
     if plot is None:
@@ -555,7 +562,7 @@ def display_double(strumodel, BatchData, BatchDetLabel, BatchSegLabel, labelpatc
         plot = Visdom()
     ndim =  0
     testingbatch = BatchData[ndim:ndim+1,...]
-    testingDetlabel,testingSeglabel,_ = strumodel.predict(testingbatch)
+    testingDetlabel,testingSeglabel = strumodel.predict(testingbatch)
     testingDetlabel = testingDetlabel[0,0,:,:]
     testingSeglabel = testingSeglabel[0,0,:,:]
 

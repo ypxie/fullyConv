@@ -119,7 +119,7 @@ def safe_boarder(boarder_seed, row, col):
     return boarder_seed
 
 
-def get_info_from_contours(myobj,contour_mat, mask_shape, resizeratio = 1):
+def get_info_from_contours(usecontour,contour_mat, mask_shape, resizeratio = 1):
     '''
     contour_mat: list of contours, each of which is 2*N, [x; y]
     mask_shape:  the mask shape of which the contour will be plotted on.
@@ -140,11 +140,11 @@ def get_info_from_contours(myobj,contour_mat, mask_shape, resizeratio = 1):
         seedCollection = np.append(seedCollection,np.array([center_y,center_x])[np.newaxis,:], axis = 0)
         boarder_seed = np.append(boarder_seed,np.array(np.concatenate([ycontour.reshape((-1,1)), xcontour.reshape((-1,1))], axis = -1)), axis = 0)
 
-        if myobj.usecontour == 1 or myobj.usecontour == 'fill':
+        if usecontour == 1 or usecontour == 'fill':
            tempmask = roipoly(temprow,tempcol,xcontour, ycontour)
            filled_img = np.logical_or(filled_img, tempmask)
 
-        elif myobj.usecontour == 'boarder':
+        elif usecontour == 'boarder':
             filled_img[ycontour, xcontour] = 1
 
     return {'seedCollection':seedCollection,
@@ -155,7 +155,7 @@ def get_info_from_contours(myobj,contour_mat, mask_shape, resizeratio = 1):
 
 def process_mask_with_weight(myobj, contour_mat, mask_shape, resizeratio = 1):
     contour_info = \
-    get_info_from_contours(myobj,contour_mat, mask_shape, resizeratio = resizeratio)
+    get_info_from_contours(myobj.usecontour,contour_mat, mask_shape, resizeratio = resizeratio)
 
     seedCollection = contour_info['seedCollection']
     boarder_seed = contour_info['boarder_seed']
@@ -217,6 +217,25 @@ def process_mask_with_weight(myobj, contour_mat, mask_shape, resizeratio = 1):
 
     return  {'det_mask': det_mask, 'seg_mask': seg_mask, 'filled_img': filled_img}
 
+def get_mask(myobj, img_org, mat_path, contourname = ['Contours'], resizeratio=1):
+    loaded_mt = loadmat(mat_path)
+    if type(contourname) is not list:
+        contourname = [contourname]
+    contour_mat = None
+    for contourname in contourname:
+        if contourname in loaded_mt.keys():
+            contour_mat = loaded_mt[contourname].tolist()[0]
+            break
+    if not contour_mat:
+        contour_mat = loaded_mt.values()[0].tolist()[0]
+        print('check the mat keys, we use the first one default key: ' + loaded_mt.keys()[0])
+
+    process_dict = process_mask_with_weight(myobj, contour_mat, img_org.shape[0:2], resizeratio=resizeratio)
+    mask_res = process_dict['det_mask']
+    #filled_img_res = process_dict['filled_img'] if 'filled_img' in process_dict.keys() else mask_res
+    #seg_mask_res = process_dict['seg_mask']
+    return mask_res
+
 def yieldImages(myobj):
     # all the image are substrate by the mean and divided by its std for RGB channel, respectively.
     mask_process_f = get(myobj.ImageGenerator_Identifier)
@@ -227,8 +246,6 @@ def yieldImages(myobj):
 
     index_list = range(0, len(allDictList))
     resizelist = myobj.resizeratio
-    #randshuffle(index_list)
-    #randshuffle(resizelist)
     for imgindx, thisindex in enumerate(index_list[2:]):
         if imgindx == myobj.maximg:
                break
@@ -256,9 +273,9 @@ def yieldImages(myobj):
             #print('start mask')
             process_dict = mask_process_f(myobj,contour_mat, img_org.shape[0:2], resizeratio = resizeratio)
             #print('end mask')
-            mask_res = process_dict['mask']
-            filled_img_res = process_dict['filled_img'] if 'filled_img' in process_dict.keys() else mask_org
-            shed_mask_res = process_dict['shed']
+            mask_res       = process_dict['det_mask']
+            filled_img_res = process_dict['filled_img'] if 'filled_img' in process_dict.keys() else mask_res
+            seg_mask_res  = process_dict['seg_mask']
 
             #We may only interested in the region inside one region.
             #since mask and filled_img are already resized version, only image need to be resized
@@ -280,12 +297,12 @@ def yieldImages(myobj):
             img_res        =  img_res[row_start:row_end, col_start:col_end,...]
             mask_res       =  mask_res[row_start:row_end, col_start:col_end,...]
             filled_img_res =  filled_img_res[row_start:row_end, col_start:col_end,...]
-            shed_mask_res  =  shed_mask_res[row_start:row_end, col_start:col_end,...]
+            seg_mask_res  =   seg_mask_res[row_start:row_end, col_start:col_end,...]
 
             outputs_dict['img'] =   pre_process_img(img_res.copy(), yuv = False)
-            outputs_dict['mask'] =  mask_res
+            outputs_dict['det_mask'] =  mask_res
             outputs_dict['filled_img'] =   filled_img_res
-            outputs_dict['shed_mask'] =    shed_mask_res
+            outputs_dict['seg_mask'] =    seg_mask_res
             yield outputs_dict
 
 def process_muscle_with_weight(myobj, contour_mat, mask_shape,resizeratio = 1):

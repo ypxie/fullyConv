@@ -53,19 +53,21 @@ def cls_accuracy(output, target, topk=(1,)):
     return res
 
 
-def to_variable(x, requires_grad=False, cuda=False):
+def to_variable(x, requires_grad=False, cuda=False, var=True):
     if type(x) is Variable:
         return x
     if type(x) is np.ndarray:
-        x = torch.from_numpy(x)
+        x = torch.from_numpy(x.astype(np.float32))
+    if var:
+        x = Variable(x, requires_grad=requires_grad)
     if cuda:
-       return Variable(x, requires_grad=requires_grad).cuda()
+       return x.cuda()
     else:
-       return Variable(x, requires_grad=requires_grad) 
+       return x 
 
 def to_device(src, ref, var = True):
     
-    src = to_variable(src) if var else src
+    src = to_variable(src, var=var)
     return src.cuda(ref.get_device()) if ref.is_cuda else src
 
 
