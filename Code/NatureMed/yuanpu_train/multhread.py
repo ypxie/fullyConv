@@ -10,10 +10,10 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'TrainingData')
-validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'ValidationData')
+trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'YuanpuData', 'TrainingData')
+validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData','YuanpuData', 'ValidationData')
 
-modelroot = os.path.join(projroot, 'Data','NatureModel')
+modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
 
 training_pool = np.array([
                  ('All'),
