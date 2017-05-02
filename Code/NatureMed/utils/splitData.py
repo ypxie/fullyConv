@@ -59,8 +59,8 @@ def doit(all_tuple, mode='copy'):
             operate(src_img, dst_subfolder)
             
 if __name__ == '__main__':
-    ImgFloder   = os.path.join(home, 'Dropbox', 'DataSet', 'Nature', 'TrainingData')
-    valid_save  = os.path.join(home, 'Dropbox', 'DataSet', 'Nature', 'ValidationData')
+    ImgFloder   = os.path.join(home,  'DataSet', 'Nature', 'TrainingData')
+    valid_save  = os.path.join(home,  'DataSet', 'Nature', 'ValidationData')
     valid_num = 5
 
     folderlist, foldernamelist = getfolders(ImgFloder)
@@ -81,8 +81,8 @@ if __name__ == '__main__':
         doit(all_tuple, mode='move')
 
     # ImgFloder  = os.path.join(home, 'DataSet', 'crop_anno_patches')
-    # train_save = os.path.join(home, 'Dropbox', 'DataSet', 'Nature', 'TrainingData')
-    # test_save  = os.path.join(home, 'Dropbox', 'DataSet', 'Nature',  'TestingData')
+    # train_save = os.path.join(home, 'DataSet', 'Nature', 'TrainingData')
+    # test_save  = os.path.join(home, 'DataSet', 'Nature',  'TestingData')
     #
     # folderlist, foldernamelist = getfolders(ImgFloder)
     # for subfolder, subname in zip(folderlist, foldernamelist):
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     #         #dst_img = os.path.join(subname)
     #         operation_tuple.append((src_mat, imgpath, dst_sub))
     #
-    #     shuffle(operation_tuple)
+    #     random.shuffle(operation_tuple)
     #     totalnum = len(operation_tuple)
     #     midnum = totalnum // 2
     #     train_tuple = operation_tuple[0:midnum]
