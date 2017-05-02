@@ -5,13 +5,15 @@ import glob, shutil
 HomeDir = os.path.expanduser('~')
 NatureDataDir = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData')
 YuanpuTrainingDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'TrainingData')
-PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData')
+YuanpuValidationDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'ValidationData')
+PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
+PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
 DiseaseNames = ['AdrenalGland', 'Bladder', 'Breast', 'Colorectal', 'Eye', 'Kidney',
                 'Lung', 'Ovary', 'Pleura', 'Skin', 'Stomach', 'Thymus',
                 'Uterus', 'BileDuct', 'Brain', 'Cervix', 'Esophagus', 'HeadNeck',
                 'Liver', 'LymphNodes', 'Pancreas', 'Prostate', 'SoftTissue', 'Testis',
                 'Thyroid']
-NumberSamples = 8
+NumberSamples = 5
 ExtraDiseaseNum = 3
 ImgFormats = ['tif', 'png', 'jpg']
 
@@ -40,11 +42,15 @@ if __name__ == '__main__':
     # random get image list
     img_list = data_random_select(select_disease, NumberSamples)
 
-    # copy to pingjun training folder
+    # copy to pingjun training folder as well as validation
     disease_dir = os.path.join(PingjunTrainingDataDir, select_disease)
     if os.path.exists(disease_dir):
         shutil.rmtree(disease_dir)
     os.makedirs(disease_dir)
+    disease_val_dir = os.path.join(PingjunValidationDataDir, select_disease)
+    if os.path.exists(disease_val_dir):
+        shutil.rmtree(disease_val_dir)
+    os.makedirs(disease_val_dir)
 
     selection_record = 'selection.txt'
     f_select = open(os.path.join(disease_dir, selection_record), 'w')
@@ -60,10 +66,13 @@ if __name__ == '__main__':
         shutil.copy(img_gt, base_dir)
         f_select.write(os.path.basename(img) + '\n')
     f_select.write('\n')
+    ln_src_dir = os.path.join(YuanpuValidationDataDir, select_disease)
+    ln_dst_dir = os.path.join(PingjunValidationDataDir, select_disease, base_folder)
+    os.system("ln -s " + ln_src_dir + ' ' + ln_dst_dir)
 
     # Random add other disease to assist
     number_disease = np.arange(3, 5)
-    number_cases = np.arange(8, 10)
+    number_cases = np.arange(NumberSamples, 10)
 
     # For each group
     for cur_num in range(1, ExtraDiseaseNum+1):
@@ -90,5 +99,9 @@ if __name__ == '__main__':
                 f_select.write(os.path.basename(img) + '\n')
             disease_list.append(tmp_dis)
             cur_dis_num += 1
-        f_select.write('\n')    
+        f_select.write('\n')
+        # link to validation
+        ln_dst_dir = os.path.join(PingjunValidationDataDir, select_disease, cur_g_folder)
+        os.system("ln -s " + ln_src_dir + ' ' + ln_dst_dir)
+
     f_select.close()
