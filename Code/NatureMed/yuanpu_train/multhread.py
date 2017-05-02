@@ -1,16 +1,17 @@
 import sys, os
 import numpy as np
-projroot   = os.path.join('..','..')
+projroot   = os.path.join('..','..','..')
 coderoot   = os.path.join(projroot, 'Code')
 home = os.path.expanduser('~')
 sys.path.insert(0, os.path.join(coderoot))
+sys.path.insert(0, '..')
 
 from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'TrainingData')
-validationDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'ValidationData')
+trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'TrainingData')
+validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'ValidationData')
 
 modelroot = os.path.join(projroot, 'Data','NatureModel')
 
