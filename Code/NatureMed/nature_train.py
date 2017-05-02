@@ -23,7 +23,7 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
 
     parser.add_argument('--batch_size', type=int, default = 8, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument('--maxepoch', type=int, default=1280, metavar='N',
+    parser.add_argument('--maxepoch', type=int, default=128*5, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR', help='learning rate (default: 0.01)')
 
