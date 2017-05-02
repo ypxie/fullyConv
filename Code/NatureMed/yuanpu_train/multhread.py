@@ -24,7 +24,7 @@ show_progress = 0
 processes = []
 Totalnum = len(training_pool)
 
-process_size = 2
+process_size = 4
 device_pool = [2,2,0,0]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
