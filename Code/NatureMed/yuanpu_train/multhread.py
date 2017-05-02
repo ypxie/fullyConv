@@ -1,8 +1,8 @@
-import sys, os
+import sys, os, pdb
 import numpy as np
 projroot   = os.path.join('..','..','..')
 coderoot   = os.path.join(projroot, 'Code')
-home = os.path.expanduser('~')
+HomeDir = os.path.expanduser('~')
 sys.path.insert(0, os.path.join(coderoot))
 sys.path.insert(0, '..')
 
@@ -10,39 +10,15 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'YuanpuData', 'TrainingData')
-validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData','YuanpuData', 'ValidationData')
+trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData', 'PingjunData', 'TrainingData', 'Cervix')
+validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', 'Cervix')
 
-modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
+# modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
+modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel')
 
-training_pool = np.array([
-                 ('All'),
-                 ('AdrenalGland'),
-                 ('Bladder'),
-                 ('Breast'),
-                 ('Colorectal'),
-                 ('Eye'),
-                 ('Kidney'),
-                 ('Lung'),
-                 ('Ovary'),
-                 ('Pleura'),
-                 ('Skin'),
-                 ('Stomach'),
-                 ('Thymus'),
-                 ('Uterus'),
-                 ('BileDuct'),
-                 ('Brain'),
-                 ('Cervix'),
-                 ('Esophagus'),
-                 ('HeadNeck'),
-                 ('Liver'),
-                 ('LymphNodes'),
-                 ('Pancreas'),
-                 ('Prostate'),
-                 ('SoftTissue'),
-                 ('Testis'),
-                 ('Thyroid')
-                ])
+pdb.set_trace()
+
+training_pool = np.array([('CervixBase'), ('Cervix1'), ('Cervix2'), ('Cervix3')])
 
 show_progress = 0
 processes = []
