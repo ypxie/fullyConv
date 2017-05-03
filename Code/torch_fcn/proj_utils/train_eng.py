@@ -135,12 +135,12 @@ def train_blocks(params, args=None):
 
     weightspath = os.path.join(modelfolder,'weights.pth')
     best_weightspath = os.path.join(modelfolder,'best_weights.pth')
-    best_score = 0
+    #best_score = 0
 
     if args.reuse_weigths == 1:
         if os.path.exists(best_weightspath):
             best_weights_dict = torch.load(best_weightspath)
-            best_score = best_weights_dict.get('acc_score', 0)
+            best_score = best_weights_dict.get('acc_score', best_score)
             strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
             print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
         elif os.path.exists(weightspath):
@@ -183,7 +183,7 @@ def train_blocks(params, args=None):
             BatchData  = np.transpose(BatchData, (0, 3,1,2))
     
             chunkidx += 1
-            print('Training--Epoch--%d----chunkId--%d', (epochNumber, chunkidx))
+            print('Training--Epoch--%d----chunkId--%d-----BatchCount--%d', (epochNumber, chunkidx, batch_count))
             for X_batch, Y_batch in mydata_genrator.flow(BatchData, [BatchLabel], args.batch_size):
                 batch_count += 1
                 strumodel.train()
@@ -235,9 +235,9 @@ def train_blocks(params, args=None):
                         count_ = 0
                     else:
                         count_ = count_ + 1
-                        if valid_loss - best_score  > best_score * worseratio:
-                            strumodel.load_state_dict(model_dict['weights'])
-                            print('weights have been reset to best_weights!')
+                    #    if valid_loss - best_score  > best_score * worseratio:
+                    #        strumodel.load_state_dict(model_dict['weights'])
+                    #        print('weights have been reset to best_weights!')
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
 		    
@@ -321,12 +321,12 @@ def train_blocks_double(params, args=None):
 
     weightspath = os.path.join(modelfolder,'weights.pth')
     best_weightspath = os.path.join(modelfolder,'best_weights.pth')
-    best_score = 0
+    #best_score = 0
 
     if args.reuse_weigths == 1:
         if os.path.exists(best_weightspath):
             best_weights_dict = torch.load(best_weightspath)
-            best_score = best_weights_dict.get('acc_score', 0)
+            best_score = best_weights_dict.get('acc_score', best_score)
             strumodel.load_state_dict(best_weights_dict['weights'])# 12)
             print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
         elif os.path.exists(weightspath):
@@ -497,9 +497,9 @@ def train_blocks_double(params, args=None):
                         count_ = 0
                     else:
                         count_ = count_ + 1
-                        if valid_loss - best_score  > best_score * worseratio:
-                            strumodel.load_state_dict(model_dict['weights'])
-                            print('weights have been reset to best_weights!')
+                    #    if valid_loss - best_score  > best_score * worseratio:
+                    #        strumodel.load_state_dict(model_dict['weights'])
+                    #        print('weights have been reset to best_weights!')
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
                     torch.save(model_dict, best_weightspath)

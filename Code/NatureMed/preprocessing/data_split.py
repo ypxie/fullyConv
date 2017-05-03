@@ -36,7 +36,8 @@ def data_random_select(disease_name, sample_num):
     return selected_list
 
 if __name__ == '__main__':
-    np.random.seed(1234)
+    seed_value = 1236
+    np.random.seed(seed_value)
     # random select disease
     select_disease = np.random.choice(DiseaseNames)
     # random get image list
@@ -54,6 +55,7 @@ if __name__ == '__main__':
 
     selection_record = 'selection.txt'
     f_select = open(os.path.join(disease_dir, selection_record), 'w')
+    f_select.write('# Seed Value: ' + str(seed_value) + '\n')
     # For Base images
     f_select.write('# Base' + '\n')
     f_select.write('## ' + select_disease + '\n')
