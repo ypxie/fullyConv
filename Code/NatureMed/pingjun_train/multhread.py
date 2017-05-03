@@ -14,7 +14,7 @@ trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'Nat
 validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', 'Cervix')
 
 # modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
-modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel')
+modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel', 'Cervix')
 
 training_pool = np.array([('CervixBase'), ('Cervix1'), ('Cervix2'), ('Cervix3')])
 
