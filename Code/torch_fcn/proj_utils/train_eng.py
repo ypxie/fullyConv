@@ -232,6 +232,7 @@ def train_blocks(params, args=None):
                         model_dict['weights'] = strumodel.state_dict()
                         model_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
+                        print('Save weights to: ', best_weightspath )
                         count_ = 0
                     else:
                         count_ = count_ + 1
@@ -241,12 +242,12 @@ def train_blocks(params, args=None):
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
 		    
-                    torch.save(model_dict, best_weightspath)
-                    print('Save weights to: ', best_weightspath)
+                    #torch.save(model_dict, best_weightspath)
+                    #print('Save weights to: ', best_weightspath)
                 # save model anyway.
                 model_dict['weights'] = strumodel.state_dict()
                 torch.save(model_dict, weightspath)
-
+                print('Save weights to: ', weightspath )
         model_dict['weights'] = strumodel.state_dict()
         torch.save(model_dict, weightspath)
 
@@ -502,7 +503,7 @@ def train_blocks_double(params, args=None):
                     #        print('weights have been reset to best_weights!')
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
-                    torch.save(model_dict, best_weightspath)
+                    #torch.save(model_dict, best_weightspath)
                 
                 model_dict['weights'] = strumodel.state_dict()
                 torch.save(model_dict, weightspath)
