@@ -21,9 +21,9 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
     parser.add_argument('--show_progress', action='store_false', default=show_progress,
                         help='show the training process using images')
 
-    parser.add_argument('--batch_size', type=int, default = 8, metavar='N',
-                        help='input batch size for training (default: 64)')
-    parser.add_argument('--maxepoch', type=int, default=128*5, metavar='N',
+    parser.add_argument('--batch_size', type=int, default = 4, metavar='N',
+                        help='input batch size for training (default: 4)')
+    parser.add_argument('--maxepoch', type=int, default=128*2, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR', help='learning rate (default: 0.01)')
 
@@ -34,9 +34,9 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
     parser.add_argument('--cuda', action='store_false', default=True, help='enables CUDA training')
     parser.add_argument('--patchsize', type=int, default=200, metavar='S', help='training patch size')
 
-    parser.add_argument('--showfre',   type=int, default = 500, metavar='S', help='freq of batch to show testing images.')
-    parser.add_argument('--savefre',   type=int, default = 500, metavar='S', help='freq of batch to save the model.')
-    parser.add_argument('--validfreq', type=int, default = 500, metavar='N', help='how many batches per validation.')
+    parser.add_argument('--showfre',   type=int, default = 300, metavar='S', help='freq of batch to show testing images.')
+    parser.add_argument('--savefre',   type=int, default = 300, metavar='S', help='freq of batch to save the model.')
+    parser.add_argument('--validfreq', type=int, default = 300, metavar='N', help='how many batches per validation.')
 
     parser.add_argument('--refershfreq', type=int, default=2, metavar='S', help='refesh the training data')
     parser.add_argument('--chunknum', type=int, default=384, metavar='S', help='number of image in each chunk')

@@ -48,8 +48,8 @@ show_progress = 0
 processes = []
 Totalnum = len(training_pool)
 
-process_size = 4
-device_pool = [2,2,0,0]
+process_size = 7
+device_pool = [3,3,2,2,2,0,0]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
