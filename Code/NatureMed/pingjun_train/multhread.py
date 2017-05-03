@@ -10,13 +10,13 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData', 'PingjunData', 'TrainingData', 'Cervix')
-validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', 'Cervix')
+trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData', 'PingjunData', 'TrainingData', 'Thymus')
+validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', 'Thymus')
 
 # modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
-modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel', 'Cervix')
+modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel', 'Thymus')
 
-training_pool = np.array([('CervixBase'), ('Cervix1'), ('Cervix2'), ('Cervix3')])
+training_pool = np.array([('ThymusBase'), ('Thymus1'), ('Thymus2'), ('Thymus3')])
 
 show_progress = 0
 processes = []
@@ -24,7 +24,7 @@ Totalnum = len(training_pool)
 
 
 process_size = 2
-device_pool = [0, 0]
+device_pool = [1, 1]
 
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
