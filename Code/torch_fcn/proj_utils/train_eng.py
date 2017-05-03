@@ -183,7 +183,7 @@ def train_blocks(params, args=None):
             BatchData  = np.transpose(BatchData, (0, 3,1,2))
     
             chunkidx += 1
-            print('Training--Epoch--%d----chunkId--%d', (epochNumber, chunkidx))
+            print('Training--Epoch--%d----chunkId--%d-----BatchCount--%d', (epochNumber, chunkidx, batch_count))
             for X_batch, Y_batch in mydata_genrator.flow(BatchData, [BatchLabel], args.batch_size):
                 batch_count += 1
                 strumodel.train()
@@ -233,8 +233,8 @@ def train_blocks(params, args=None):
                         model_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
                         count_ = 0
-                    #else:
-                    #    count_ = count_ + 1
+                    else:
+                        count_ = count_ + 1
                     #    if valid_loss - best_score  > best_score * worseratio:
                     #        strumodel.load_state_dict(model_dict['weights'])
                     #        print('weights have been reset to best_weights!')
@@ -495,8 +495,8 @@ def train_blocks_double(params, args=None):
                         model_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
                         count_ = 0
-                    #else:
-                    #    count_ = count_ + 1
+                    else:
+                        count_ = count_ + 1
                     #    if valid_loss - best_score  > best_score * worseratio:
                     #        strumodel.load_state_dict(model_dict['weights'])
                     #        print('weights have been reset to best_weights!')

@@ -36,7 +36,7 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
 
     parser.add_argument('--showfre',   type=int, default = 300, metavar='S', help='freq of batch to show testing images.')
     parser.add_argument('--savefre',   type=int, default = 300, metavar='S', help='freq of batch to save the model.')
-    parser.add_argument('--validfreq', type=int, default = 300, metavar='N', help='how many batches per validation.')
+    parser.add_argument('--validfreq', type=int, default = 300, metavar='S', help='how many batches per validation.')
 
     parser.add_argument('--refershfreq', type=int, default=2, metavar='S', help='refesh the training data')
     parser.add_argument('--chunknum', type=int, default=384, metavar='S', help='number of image in each chunk')
