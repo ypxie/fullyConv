@@ -153,7 +153,7 @@ def train_blocks(params, args=None):
             #print(weightspath)
             weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
             strumodel.load_state_dict(weights_dict)# 12)
-        print('reload weights from {}, last best score {}'.format(weightspath, best_score))
+            print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
@@ -341,7 +341,7 @@ def train_blocks_double(params, args=None):
             #print(weightspath)
             weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
             strumodel.load_state_dict(weights_dict['weights'])# 12)
-        print('reload weights from {}, last best score {}'.format(weightspath, best_score))
+            print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
