@@ -26,17 +26,16 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
     parser.add_argument('--maxepoch', type=int, default=128, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR', help='learning rate (default: 0.01)')
-
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='SGD momentum (default: 0.5)')
     
-    parser.add_argument('--weight_decay', type=float, default=1e-4, help='weight decay for training')
-    
+    parser.add_argument('--weight_decay', type=float, default=1e-6, help='weight decay for training')
+
     parser.add_argument('--cuda', action='store_false', default=True, help='enables CUDA training')
     parser.add_argument('--patchsize', type=int, default=200, metavar='S', help='training patch size')
 
-    parser.add_argument('--showfre',   type=int, default = 300, metavar='S', help='freq of batch to show testing images.')
-    parser.add_argument('--savefre',   type=int, default = 300, metavar='S', help='freq of batch to save the model.')
-    parser.add_argument('--validfreq', type=int, default = 300, metavar='S', help='how many batches per validation.')
+    parser.add_argument('--showfre',   type=int, default = 200, metavar='S', help='freq of batch to show testing images.')
+    parser.add_argument('--savefre',   type=int, default = 200, metavar='S', help='freq of batch to save the model.')
+    parser.add_argument('--validfreq', type=int, default = 200, metavar='S', help='how many batches per validation.')
 
     parser.add_argument('--refershfreq', type=int, default=2, metavar='S', help='refesh the training data')
     parser.add_argument('--chunknum', type=int, default=384, metavar='S', help='number of image in each chunk')
@@ -70,8 +69,8 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
         strumodel.cuda(device)
 
     #opt = optim.Adadelta(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay))
-    #opt = optim.SGD(strumodel.parameters(), lr=args.lr, momentum=0.9, nesterov = True, weight_decay=args.weight_decay)
-    opt = optim.Adamax(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    opt = optim.SGD(strumodel.parameters(), lr=args.lr, momentum=0.9, nesterov = True, weight_decay=args.weight_decay)
+    #opt = optim.Adamax(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     classparams = {}
     classparams['patchsize']   = args.patchsize
@@ -105,9 +104,9 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
     classparams['labelSuffix']  = ["",'_withcontour', '_gt','_seg'] # the suffix of label
     classparams['maxsamples']  = 1280000
     classparams['usecontour']  = 1 # this is just used to fill the cotour to get filled_img, 
-    classparams['pickratio']   = 0.05  # 1 means take all the pixel
+    classparams['pickratio']   = 0.2  # 1 means take all the pixel
 
-    classparams['maximg'] = 40
+    classparams['maximg'] = 30
     classparams['mask_thresh'] = 50
     classparams['mask_prob'] =0.1
     classparams['maxpatch'] = 30

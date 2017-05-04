@@ -59,26 +59,26 @@ def doit(all_tuple, mode='copy'):
             operate(src_img, dst_subfolder)
             
 if __name__ == '__main__':
-    ImgFloder   = os.path.join(home,  'DataSet', 'Nature', 'TrainingData')
-    valid_save  = os.path.join(home,  'DataSet', 'Nature', 'ValidationData')
-    valid_num = 5
-
-    folderlist, foldernamelist = getfolders(ImgFloder)
-    for subfolder, subname in zip(folderlist, foldernamelist):
-        filelist, namelist = getfiles(subfolder,['.tif', '.png', '.jpg'])
-        operation_tuple = []
-        for imgpath, imgname in zip(filelist, namelist):
-            matfilename = imgname + '_withcontour.mat'
-            src_mat = os.path.join(subfolder, matfilename)
-            dst_sub = os.path.join(subname)
-            operation_tuple.append((src_mat, imgpath, dst_sub))
-
-        random.shuffle(operation_tuple)
-        valid_tuple = operation_tuple[0:valid_num]
-        all_tuple = [
-            (valid_save, valid_tuple)
-        ]
-        doit(all_tuple, mode='move')
+    # ImgFloder   = os.path.join(home,  'DataSet', 'Nature', 'TrainingData')
+    # valid_save  = os.path.join(home,  'DataSet', 'Nature', 'ValidationData')
+    # valid_num = 5
+    #
+    # folderlist, foldernamelist = getfolders(ImgFloder)
+    # for subfolder, subname in zip(folderlist, foldernamelist):
+    #     filelist, namelist = getfiles(subfolder,['.tif', '.png', '.jpg'])
+    #     operation_tuple = []
+    #     for imgpath, imgname in zip(filelist, namelist):
+    #         matfilename = imgname + '_withcontour.mat'
+    #         src_mat = os.path.join(subfolder, matfilename)
+    #         dst_sub = os.path.join(subname)
+    #         operation_tuple.append((src_mat, imgpath, dst_sub))
+    #
+    #     random.shuffle(operation_tuple)
+    #     valid_tuple = operation_tuple[0:valid_num]
+    #     all_tuple = [
+    #         (valid_save, valid_tuple)
+    #     ]
+    #     doit(all_tuple, mode='move')
 
     # ImgFloder  = os.path.join(home, 'DataSet', 'crop_anno_patches')
     # train_save = os.path.join(home, 'DataSet', 'Nature', 'TrainingData')

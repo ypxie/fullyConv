@@ -26,6 +26,7 @@ class myobj(object):
     pass
 
 def imread(imgfile):
+    assert os.path.exists(imgfile), '{} does not exist!'.format(imgfile)
     srcBGR = cv2.imread(imgfile)
     destRGB = cv2.cvtColor(srcBGR, cv2.COLOR_BGR2RGB)
     return destRGB

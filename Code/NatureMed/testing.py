@@ -40,7 +40,7 @@ parser.add_argument('--showseg', action='store_false', default=False, help='show
 parser.add_argument('--resizeratio', default=1, help='If you want to resize the original test image.')
 
 parser.add_argument('--printImg', action='store_false', default=True, help='If you want to print the resulting images.')
-parser.add_argument('--runTest',  action='store_false', default=False, help='If you want to test the image for reslst.')
+parser.add_argument('--runTest',  action='store_false', default=True, help='If you want to test the image for reslst.')
 parser.add_argument('--runEval',  action='store_false', default=True, help='If you want to run the evaluation code.')
 
 parser.add_argument('--lenpool', default=[5,7,9,11,13], help='pool of length to get local maxima.')
@@ -84,8 +84,8 @@ def test_worker(testingpool, det_model, testingimageroot):
         det_weightspath = os.path.join(det_modelfolder, weights_name)
         ModelDict = {}
         print(det_weightspath)
-        weights_dict = torch.load(det_weightspath)
-        det_model.load_state_dict(weights_dict['weights'])  # 12)
+        weights_dict = torch.load(det_weightspath,map_location=lambda storage, loc: storage)
+        det_model.load_state_dict(weights_dict)  # 12)
 
         ModelDict['model'] = det_model
 
@@ -117,41 +117,40 @@ def test_worker(testingpool, det_model, testingimageroot):
 
 if __name__ == "__main__":
     dataroot = os.path.join(projroot, 'Data')
-    modelroot = os.path.join(dataroot, 'Model', 'Nature')
+    modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'Nature' ,'TestingData')
+    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset det_model_folder weights_name Probrefresh Seedrefresh')
 
     testing_folders = np.array([
-                            #('All')
                              ('AdrenalGland'),
                              ('Bladder'),
-                             ('Breast'),
-                             ('Colorectal'),
-                             ('Eye'),
-                             ('Kidney'),
-                             ('Lung'),
-                             ('Ovary'),
-                             ('Pleura'),
-                             ('Skin'),
-                             ('Stomach'),
-                             ('Thymus'),
-                             ('Uterus'),
-                             ('BileDuct'),
-                             ('Brain'),
-                             ('Cervix'),
-                             ('Esophagus'),
-                             ('HeadNeck'),
-                             ('Liver'),
-                             ('LymphNodes'),
-                             ('Pancreas'),
-                             ('Prostate'),
-                             ('SoftTissue'),
-                             ('Testis'),
-                             ('Thyroid')
+                             # ('Breast'),
+                             # ('Colorectal'),
+                             # ('Eye'),
+                             # ('Kidney'),
+                             # ('Lung'),
+                             # ('Ovary'),
+                             # ('Pleura'),
+                             # ('Skin'),
+                             # ('Stomach'),
+                             # ('Thymus'),
+                             # ('Uterus'),
+                             # ('BileDuct'),
+                             # ('Brain'),
+                             # ('Cervix'),
+                             # ('Esophagus'),
+                             # ('HeadNeck'),
+                             # ('Liver'),
+                             # ('LymphNodes'),
+                             # ('Pancreas'),
+                             # ('Prostate'),
+                             # ('SoftTissue'),
+                             # ('Testis'),
+                             # ('Thyroid')
                         ])
-    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', 'multicontex' ,'weights.pth',  True, True]
+    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', 'multicontex' ,'best_weights.pth',  True, True]
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []
@@ -163,7 +162,7 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'Nature' ,'Experiments','evaluation')
+        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
         
@@ -182,7 +181,7 @@ if __name__ == "__main__":
             this_folder = os.path.join(testingimageroot, this_foldername)
             resfolder   = os.path.join(this_folder, resultmask)
             eval_folder(imgfolder= this_folder, resfolder= resfolder,savefolder= savefolder,
-                        radius=16, resultmask = 'multicontex',thresh_pool=args.thresh_pool,
+                        radius=16, resultmask = '',thresh_pool=args.thresh_pool,
                         len_pool= args.lenpool, imgExt=['.tif', '.jpg','.png'],contourname='Contours')
     #testingpool = [
                     #test_tuple('LymphNodes', ['.tif'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),

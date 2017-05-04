@@ -36,7 +36,7 @@ def get_seg_seed_name(step,threshhold,seg_thresh, min_len,resultmask=""):
     return name
     
 class runtestImg(object):
-    def __init__(self, **kwargs):
+    def __init__(self, kwargs):
         self.ImgDir = ''
         self.savefolder = ''
         self.ImgExt = ['.jpg']

@@ -133,20 +133,27 @@ def train_blocks(params, args=None):
     paramspath = os.path.join(modelfolder, 'params.h5')
     dd.io.save(paramspath, classparams, compression='zlib') 
 
+    utilpath = os.path.join(modelfolder, 'utils.h5')
+
     weightspath = os.path.join(modelfolder,'weights.pth')
     best_weightspath = os.path.join(modelfolder,'best_weights.pth')
-    #best_score = 0
-
+    util_dict = {}
     if args.reuse_weigths == 1:
-        if os.path.exists(best_weightspath):
-            best_weights_dict = torch.load(best_weightspath)
-            best_score = best_weights_dict.get('acc_score', best_score)
-            strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
-            print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
-        elif os.path.exists(weightspath):
-            print(weightspath)
-            weights_dict = torch.load(weightspath)
-            strumodel.load_state_dict(weights_dict['weights'])# 12)
+        if os.path.exists(utilpath):
+            try:
+                util_dict = dd.io.load(utilpath)
+                best_score = util_dict['acc_score']
+            except:
+                pass
+            #best_weights_dict = torch.load(best_weightspath)
+            #best_score = best_weights_dict.get('acc_score', best_score)
+            #strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
+            #print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
+        if os.path.exists(weightspath):
+            #print(weightspath)
+            weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
+            strumodel.load_state_dict(weights_dict)# 12)
+        print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
@@ -224,14 +231,15 @@ def train_blocks(params, args=None):
                         valid_loss  =  creteria(to_device(valid_mask, strumodel.device_id, var =False), 
                                                 to_device(valid_pred, strumodel.device_id, var =False))
                         
-                    #valid_loss = valid_loss
                     print('\nTesting loss: {}, best_score: {}'.format(valid_loss, best_score))
                     if valid_loss <=  best_score:
                         best_score = valid_loss
                         print('update to new best_score: {}'.format(best_score))
-                        model_dict['weights'] = strumodel.state_dict()
-                        model_dict['acc_score'] = best_score
+                        model_dict = strumodel.state_dict()
+                        util_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
+                        dd.io.save(utilpath, util_dict)
+                        
                         print('Save weights to: ', best_weightspath )
                         count_ = 0
                     else:
@@ -245,12 +253,11 @@ def train_blocks(params, args=None):
                     #torch.save(model_dict, best_weightspath)
                     #print('Save weights to: ', best_weightspath)
                 # save model anyway.
-                model_dict['weights'] = strumodel.state_dict()
+                model_dict = strumodel.state_dict()
                 torch.save(model_dict, weightspath)
-                print('Save weights to: ', weightspath )
-        model_dict['weights'] = strumodel.state_dict()
+                print('Save weights to: ', weightspath)
+        model_dict = strumodel.state_dict()
         torch.save(model_dict, weightspath)
-
 
 def train_blocks_double(params, args=None):
     name = params['name']
@@ -328,12 +335,13 @@ def train_blocks_double(params, args=None):
         if os.path.exists(best_weightspath):
             best_weights_dict = torch.load(best_weightspath)
             best_score = best_weights_dict.get('acc_score', best_score)
-            strumodel.load_state_dict(best_weights_dict['weights'])# 12)
-            print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
-        elif os.path.exists(weightspath):
-            print(weightspath)
-            weights_dict = torch.load(weightspath)
+            #strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
+            #print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
+        if os.path.exists(weightspath):
+            #print(weightspath)
+            weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
             strumodel.load_state_dict(weights_dict['weights'])# 12)
+        print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
@@ -488,12 +496,13 @@ def train_blocks_double(params, args=None):
 
                    # valid_loss = valid_total_loss.data.cpu().numpy().mean()
                     valid_loss = valid_total_loss
+                    print(type(valid_loss))
                     print('\nTesting loss: {}, best_score: {}'.format(valid_loss, best_score))
                     if valid_loss <=  best_score:
                         best_score = valid_loss
                         print('update to new best_score: {}'.format(best_score))
                         model_dict['weights'] = strumodel.state_dict()
-                        model_dict['acc_score'] = best_score
+                        model_dict['acc_score'] = best_score.cpu()
                         torch.save(model_dict, best_weightspath)
                         count_ = 0
                     else:

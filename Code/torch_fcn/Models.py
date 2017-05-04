@@ -9,8 +9,8 @@ def passthrough(x, **kwargs):
     return x
 
 def convAct(nchan):
-    return nn.PReLU(nchan)
-    #return nn.ELU(inplace=True)
+    #return nn.PReLU(nchan)
+    return nn.ELU(inplace=True)
 
 # normalization between sub-volumes is necessary
 # for good performance
@@ -194,21 +194,21 @@ class MultiContex(nn.Module):
     def __init__(self, nll=False):
         super(MultiContex, self).__init__()
         self.register_buffer('device_id', torch.zeros(1))
-        self.in_tr_100     = InputTransition(3, 16) 
-        self.down_tr32_50  = DownTransition(16, 32, 1)
-        self.down_tr64_25  = DownTransition(32, 64, 2)
-        self.down_tr128_12 = DownTransition(64, 128, 2,dropout=True)
-        self.down_tr256_6  = DownTransition(128, 256,  2,dropout=True)
+        self.in_tr_100     = InputTransition(3, 32) 
+        self.down_tr32_50  = DownTransition(32, 64, 1)
+        self.down_tr64_25  = DownTransition(64, 128, 2)
+        self.down_tr128_12 = DownTransition(128, 256, 2,dropout=True)
+        self.down_tr256_6  = DownTransition(256, 256,  2,dropout=True)
 
-        self.up_tr256_12   = UpConcat(256, 128, 256, 2,  dropout=True)
-        self.up_tr128_25   = UpConcat(256, 64, 128, 2, dropout=True)
-        self.up_tr64_50    = UpConcat(128, 32, 64, 1)
-        self.up_tr32_100   = UpConcat(64,  16, 32, 1)
-       
-        self.up_12_100   = UpConv(256, 32, 2, stride = 8)
-        self.up_25_100   = UpConv(128,  32, 2, stride = 4)
+        self.up_tr256_12   = UpConcat(256, 256, 512, 2,  dropout=True)
+        self.up_tr128_25   = UpConcat(512, 128, 256, 2, dropout=True)
+        self.up_tr64_50    = UpConcat(256, 64, 128, 1)
+        self.up_tr32_100   = UpConcat(128, 32, 64, 1)
         
-        self.out_tr      = OutputTransition(32*3, 1, 2)
+        self.up_12_100   = UpConv(512, 64, 2, stride = 8)
+        self.up_25_100   = UpConv(256, 64, 2, stride = 4)
+        
+        self.out_tr      = OutputTransition(64*3, 1, 32)
 
     def forward(self, x):
         x = to_device(x,self.device_id)
@@ -251,37 +251,37 @@ class MultiContex_seg(nn.Module):
         super(MultiContex_seg, self).__init__()
         self.multi_context = multi_context
         self.register_buffer('device_id', torch.zeros(1))
-        self.in_tr_100     = InputTransition(3, 16) 
-        self.down_tr32_50  = DownTransition(16, 32, 1)
-        self.down_tr64_25  = DownTransition(32, 64, 2)
-        self.down_tr128_12 = DownTransition(64, 128, 2,dropout=True)
-        self.down_tr256_6  = DownTransition(128, 128,  2, dropout=True)
+        self.in_tr_100     = InputTransition(3, 32) 
+        self.down_tr32_50  = DownTransition(32, 64, 1)
+        self.down_tr64_25  = DownTransition(64, 128, 2)
+        self.down_tr128_12 = DownTransition(128, 256, 2,dropout=True)
+        self.down_tr256_6  = DownTransition(256, 256,  2, dropout=True)
 
-        self.up_tr256_12   = UpConcat(128, 128, 256, 2,  dropout=True)
-        self.up_tr128_25   = UpConcat(256, 64, 128, 2,  dropout=True)
-        self.up_tr64_50    = UpConcat(128, 32, 64, 1)
-        self.up_tr32_100   = UpConcat(64,  16, 32, 1)
+        self.up_tr256_12   = UpConcat(256, 256, 512, 2,  dropout=True)
+        self.up_tr128_25   = UpConcat(512, 128, 256, 2,  dropout=True)
+        self.up_tr64_50    = UpConcat(256, 64, 128, 1)
+        self.up_tr32_100   = UpConcat(128, 32, 64, 1)
 
         if self.multi_context:
-            self.up_12_100   = UpConv(256, 32, 2,  stride = 8)
-            self.up_25_100   = UpConv(128,  32, 2, stride = 4)
+            self.up_12_100   = UpConv(512, 64, 2,  stride = 8)
+            self.up_25_100   = UpConv(256,  64, 2, stride = 4)
 
-            self.det_tran  = ConvBN(32*2, inChans=32*3)
-            self.seg_tran  = ConvBN(32*2, inChans=32*3)
-            self.adv_tran  = ConvBN(32*2, inChans=32*3)
+            self.det_tran  = ConvBN(64*2, inChans=64*3)
+            self.seg_tran  = ConvBN(64*2, inChans=64*3)
+            self.adv_tran  = ConvBN(64*2, inChans=64*3)
         else:
-            self.det_tran = ConvBN(32 * 2, inChans=32)
-            self.seg_tran = ConvBN(32 * 2, inChans=32)
-            self.adv_tran = ConvBN(32 * 2, inChans=32)
+            self.det_tran = ConvBN(64 * 2, inChans=64)
+            self.seg_tran = ConvBN(64 * 2, inChans=64)
+            self.adv_tran = ConvBN(64 * 2, inChans=64)
 
-        self.det_hid = _make_nConv(32 * 2, 2)
-        self.det_out = OutputTransition(32 * 2, 1, 2)
+        self.det_hid = _make_nConv(64 * 2, 2)
+        self.det_out = OutputTransition(64 * 2, 1, 32)
 
-        self.seg_hid = _make_nConv(32 * 2, 2)
-        self.seg_out = OutputTransition(32 * 2, 1, 2)
+        self.seg_hid = _make_nConv(64 * 2, 2)
+        self.seg_out = OutputTransition(64 * 2, 1, 32)
 
-        self.adv_hid = _make_nConv(32 * 2, 2)
-        self.adv_out = OutputTransition(32 * 2, 1, 2)
+        self.adv_hid = _make_nConv(64 * 2, 2)
+        self.adv_out = OutputTransition(64 * 2, 1, 32)
 
         #self.dense_mean = nn.Linear(32*3, 128)
         #self.dense_adv  = nn.Linear(128, 1)
