@@ -169,7 +169,7 @@ def imresize_shape(img, outshape):
         temp = np.reshape(temp, temp.shape + (1,))
     return temp
 
-def pre_process_img(img, yuv = False, mode = 'rescale', norm = True):
+def pre_process_img(img, yuv = False, mode = 'channel', norm = True):
     if yuv :
       img = RGB2YUV(img)
     img = img.astype('float32')
