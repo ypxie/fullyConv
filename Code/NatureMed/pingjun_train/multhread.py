@@ -10,21 +10,32 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData', 'PingjunData', 'TrainingData', 'Thymus')
-validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', 'Thymus')
+DiseaseName = 'Cervix'
+
+trainingDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData', 'PingjunData', 'TrainingData', DiseaseName)
+validationDataroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData','PingjunData', 'ValidationData', DiseaseName)
 
 # modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
-modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel', 'Thymus')
+modelroot = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel', DiseaseName)
 
-training_pool = np.array([('ThymusBase'), ('Thymus1'), ('Thymus2'), ('Thymus3')])
+pool_collection = []
+task_num = 4
+for ind in range(task_num):
+    if ind == 0:
+        pool_collection.append((DiseaseName + 'Base'))
+    else:
+        pool_collection.append((DiseaseName + str(ind)))
+
+# training_pool = np.array([('ThymusBase'), ('Thymus1'), ('Thymus2'), ('Thymus3')])
+training_pool = np.array(pool_collection)
 
 show_progress = 0
 processes = []
 Totalnum = len(training_pool)
 
 
-process_size = 2
-device_pool = [1, 1]
+process_size = 4
+device_pool = [0, 0, 0, 0]
 
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
