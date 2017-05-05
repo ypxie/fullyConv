@@ -180,12 +180,16 @@ def pre_process_img(img, yuv = False, mode = 'channel', norm = True):
         if mode == 'channel':
             for ch_id in range(img.shape[2]):
                 this_ch = img[:,:, ch_id]
-                img[:,:, ch_id] = (this_ch - np.mean(this_ch)) / (np.std(this_ch) + 1e-8)
+                this_mean =  np.mean(this_ch)
+                this_std  =  np.std(this_ch)
+                img[:,:, ch_id] = (this_ch - this_mean) / (this_std + 1e-8)
         elif mode == 'naive':
             img = img/(np.max(img[:]) + 1e-8)
         elif mode == 'rescale':
-            img = (img - np.min(img[:])) / ( np.max(img[:]) - np.min(img[:]) + 1e-8)
-            img = img - np.mean(img[:])
+            this_min, this_max, this_mean = np.min(img[:]), np.max(img[:]),np.mean(img[:])
+            
+            img = (img - this_min) / ( this_max- this_min + 1e-8)
+            img = img - this_mean
         else:
             raise Exception('Unknown mode for pre_processing')
     return img
