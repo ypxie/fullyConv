@@ -11,7 +11,7 @@ from torch_fcn.proj_utils.train_eng import train_blocks
 import torch.optim as optim
 
 def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.', device=0,
-                 show_progress=False,modelsubfolder = 'multicontex', validation=True):
+                 show_progress=False,modelsubfolder = 'multicontex', validation=True, maxepoch = 128):
     
     parser = argparse.ArgumentParser(description = 'Nature cell detection training')
 
@@ -23,7 +23,7 @@ def train_worker(trainingDataroot, validationDataroot, trainingset, modelroot='.
 
     parser.add_argument('--batch_size', type=int, default = 4, metavar='N',
                         help='input batch size for training (default: 4)')
-    parser.add_argument('--maxepoch', type=int, default=128, metavar='N',
+    parser.add_argument('--maxepoch', type=int, default = maxepoch, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR', help='learning rate (default: 0.01)')
     parser.add_argument('--momentum', type=float, default=0.9, metavar='M', help='SGD momentum (default: 0.5)')

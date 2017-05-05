@@ -55,7 +55,8 @@ for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
     print(select_pool)
     for idx, (dataset, device) in enumerate(zip(select_pool,device_pool)):
-        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot, device, show_progress))
+        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot, 
+                                                  device, show_progress, 'multicontex',True, 128))
         p.start()
         processes.append(p)
     for p in processes:
