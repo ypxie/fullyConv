@@ -14,11 +14,11 @@ from torch_fcn.proj_utils.testingclass import runtestImg
 from torch_fcn.proj_utils.ImageGenerator import get_mask
 import torch
 
-trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'TrainingData')
-validationDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'ValidationData')
+#trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'TrainingData')
+#validationDataroot = os.path.join(home,'Dropbox','DataSet', 'Nature', 'ValidationData')
 
-modelroot = os.path.join(projroot, 'Data','Model', 'Nature')
-file_list = os.path.join(trainingDataroot, 'All', 'a1.jpg')
+modelroot = os.path.join(projroot, 'Data','NatureModel', 'YuanpuModel')
+#file_list = os.path.join(trainingDataroot, 'All', 'a1.jpg')
 weightspath = os.path.join(modelroot, 'All', 'multicontex','best_weights.pth')
 device = 0
 strumodel = build_model()
@@ -27,7 +27,7 @@ strumodel.cuda(device)
 weights_dict = torch.load(weightspath)
 strumodel.load_state_dict(weights_dict['weights'])# 12)
 
-tester = runtestImg(model = strumodel)
+tester = runtestImg({'model': strumodel})
 plot = Visdom()
 
 classparams = {}
@@ -76,13 +76,13 @@ def get_file_info(filefolder, filename):
 
     return img_path, mat_path
 
-data_root = '/home/yuanpuxie/Dropbox/DataSet/Nature/TrainingData'
+data_root = os.path.join(home, 'Dropbox/DataSet/NatureData/YuanpuData/TrainingData')
 tuple_list = [
-    ('AdrenalGland','TCGA-OR-A5J7-40x-01', '.jpg'),
+    ('AdrenalGland','TCGA-OR-A5JC-40x-01', '.jpg'),
     ('HeadNeck','TCGA-BA-A6DJ-40x-1', '.tif'),
-    ('Kidney','TCGA-KO-8406-40x-1', '.tif'),
-    ('Ovary','TCGA-23-1030-01Z-00-DX1', '.tif'),
-    ('Pleura','TCGA-3U-A98D-01Z-00-DX1', '.tif'),
+    ('Kidney','TCGA-KL-8324-40x-1', '.tif'),
+    ('Ovary','TCGA-3P-A9WA-01Z-00-DX1', '.tif'),
+    ('Pleura','TCGA-3U-A98G-01Z-00-DX1', '.tif'),
 ]
 for this_tuple in tuple_list:
     sub_folder, img_name, ext = this_tuple
@@ -97,9 +97,11 @@ for this_tuple in tuple_list:
 
     predMap = get_mask(StruExtractor, img_org, mat_path, contourname = ['Contours'], resizeratio=1)[:,:,0]
 
-    #plot.image(img_org.transpose(2,0,1),     opts=dict(title=img_name))
-    plot.heatmap(X=VotingMap, win=img_name + '_prediction', opts=dict(title=img_name + '_prediction'))
-    plot.heatmap(X=predMap,   win=img_name + '_groundTruth', opts=dict(title=img_name + '_groundTruth'))
+    this_marker = sub_folder + '_' + img_name
+    plot.image(img_org.transpose(2,0,1),     opts=dict(title = this_marker))
+    plot.heatmap(X=VotingMap, win= this_marker + '_prediction', opts=dict(title=this_marker + '_prediction'))
+    plot.heatmap(X=predMap,   win= this_marker + '_groundTruth', opts=dict(title=this_marker + '_groundTruth'))
+    imshow(VotingMap)
 
 
 

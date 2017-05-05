@@ -93,9 +93,9 @@ if __name__ == "__main__":
         
         ModelDict = {}
 
-        weights_dict = torch.load(det_weightspath)
+        weights_dict = torch.load(det_weightspath,map_location=lambda storage, loc: storage)
         print(det_weightspath)
-        det_model.load_state_dict(weights_dict['weights'])# 12)
+        det_model.load_state_dict(weights_dict)# 12)
 
         classparams = {}
         classparams['ImgDir'] = testingimagefolder

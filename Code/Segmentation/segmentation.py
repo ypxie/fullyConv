@@ -37,10 +37,10 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
 
         parser.add_argument('--cuda', action='store_false', default=True, help='enables CUDA training')
         parser.add_argument('--patchsize', type=int, default=200, metavar='S', help='training patch size')
-        parser.add_argument('--showfre', type=int, default=100, metavar='S',
+        parser.add_argument('--showfre', type=int, default=200, metavar='S',
                             help='freq of batch to show testing images.')
 
-        parser.add_argument('--savefre', type=int, default=10, metavar='S', help='freq of batch to save the model.')
+        parser.add_argument('--savefre', type=int, default=200, metavar='S', help='freq of batch to save the model.')
 
         parser.add_argument('--refershfreq', type=int, default=2, metavar='S', help='refesh the training data')
         parser.add_argument('--chunknum', type=int, default=384, metavar='S', help='number of image in each chunk')
@@ -118,12 +118,12 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
     classparams['labelSuffix']  = ["",'_withcontour', '_gt','_seg'] # the suffix of label
     classparams['maxsamples']  = 1280000
     classparams['usecontour']  = 1 # this is just used to fill the cotour to get filled_img, 
-    classparams['pickratio']   = 0.05  # 1 means take all the pixel
+    classparams['pickratio']   = 0.2  # 1 means take all the pixel
 
     classparams['maximg'] = 30
     classparams['mask_thresh'] = 50
     classparams['mask_prob'] =0.1
-    classparams['maxpatch'] = 10
+    classparams['maxpatch'] = 30
     classparams['random_pick'] =  True # if you wanna random pick
     
     StruExtractor = FcnExtractor(classparams)
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     trainingDataroot = os.path.join(home,'DataSet', 'FY_TMI', 'train')
     modelroot = os.path.join(projroot, 'Data','Model')
 
-    train_worker(trainingDataroot = trainingDataroot, trainingset= 'breast',device=1,  multi_context = True,
+    train_worker(trainingDataroot = trainingDataroot, trainingset= 'breast',device=0,  multi_context = True,
                  show_progress=True, modelroot=modelroot, modelsubfolder = 'multiout')
     #train_worker(trainingDataroot=trainingDataroot, trainingset='breast', multi_context=False,
     #             show_progress=True, modelroot=modelroot, modelsubfolder='multiout_no_multicont')

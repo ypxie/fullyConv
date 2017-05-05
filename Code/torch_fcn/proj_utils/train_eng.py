@@ -129,24 +129,32 @@ def train_blocks(params, args=None):
 
     if not os.path.exists(modelfolder):
         os.makedirs(modelfolder)
-    modelDict = {}
+    model_dict = {}
+    util_dict = {}
     paramspath = os.path.join(modelfolder, 'params.h5')
     dd.io.save(paramspath, classparams, compression='zlib') 
 
+    utilpath = os.path.join(modelfolder, 'utils.h5')
+
     weightspath = os.path.join(modelfolder,'weights.pth')
     best_weightspath = os.path.join(modelfolder,'best_weights.pth')
-    #best_score = 0
-
+    
     if args.reuse_weigths == 1:
-        if os.path.exists(best_weightspath):
-            best_weights_dict = torch.load(best_weightspath)
-            best_score = best_weights_dict.get('acc_score', best_score)
-            strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
-            print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
-        elif os.path.exists(weightspath):
-            print(weightspath)
-            weights_dict = torch.load(weightspath)
-            strumodel.load_state_dict(weights_dict['weights'])# 12)
+        if os.path.exists(utilpath):
+            try:
+                util_dict = dd.io.load(utilpath)
+                best_score = util_dict['acc_score']
+            except:
+                pass
+            #best_weights_dict = torch.load(best_weightspath)
+            #best_score = best_weights_dict.get('acc_score', best_score)
+            #strumodel.load_state_dict(best_weights_dict['weights'])  # 12)
+            #print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
+        if os.path.exists(weightspath):
+            #print(weightspath)
+            weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
+            strumodel.load_state_dict(weights_dict)# 12)
+            print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
@@ -155,7 +163,7 @@ def train_blocks(params, args=None):
     thislabel = np.zeros((args.chunknum,args.patchsize, args.patchsize, args.label_channels))
     display_count = 0
     batch_count = 0
-    model_dict = {}
+    
     steps, vals = [], []
     for epochNumber in range(args.maxepoch):
 
@@ -224,14 +232,16 @@ def train_blocks(params, args=None):
                         valid_loss  =  creteria(to_device(valid_mask, strumodel.device_id, var =False), 
                                                 to_device(valid_pred, strumodel.device_id, var =False))
                         
-                    #valid_loss = valid_loss
                     print('\nTesting loss: {}, best_score: {}'.format(valid_loss, best_score))
                     if valid_loss <=  best_score:
                         best_score = valid_loss
                         print('update to new best_score: {}'.format(best_score))
-                        model_dict['weights'] = strumodel.state_dict()
-                        model_dict['acc_score'] = best_score
+                        model_dict = strumodel.state_dict()
+                        util_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
+                        dd.io.save(utilpath, util_dict)
+                        
+                        print('Save weights to: ', best_weightspath )
                         count_ = 0
                     else:
                         count_ = count_ + 1
@@ -241,15 +251,14 @@ def train_blocks(params, args=None):
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
 		    
-                    torch.save(model_dict, best_weightspath)
-                    print('Save weights to: ', best_weightspath)
+                    #torch.save(model_dict, best_weightspath)
+                    #print('Save weights to: ', best_weightspath)
                 # save model anyway.
-                model_dict['weights'] = strumodel.state_dict()
+                model_dict = strumodel.state_dict()
                 torch.save(model_dict, weightspath)
-
-        model_dict['weights'] = strumodel.state_dict()
+                print('Save weights to: ', weightspath)
+        model_dict = strumodel.state_dict()
         torch.save(model_dict, weightspath)
-
 
 def train_blocks_double(params, args=None):
     name = params['name']
@@ -315,24 +324,27 @@ def train_blocks_double(params, args=None):
 
     if not os.path.exists(modelfolder):
         os.makedirs(modelfolder)
-    modelDict = {}
+    model_dict = {}
+    util_dict = {}
+
     paramspath = os.path.join(modelfolder, 'params.h5')
     dd.io.save(paramspath, classparams, compression='zlib') 
-
+    utilpath = os.path.join(modelfolder, 'utils.h5')
     weightspath = os.path.join(modelfolder,'weights.pth')
     best_weightspath = os.path.join(modelfolder,'best_weights.pth')
     #best_score = 0
-
     if args.reuse_weigths == 1:
-        if os.path.exists(best_weightspath):
-            best_weights_dict = torch.load(best_weightspath)
-            best_score = best_weights_dict.get('acc_score', best_score)
-            strumodel.load_state_dict(best_weights_dict['weights'])# 12)
-            print('reload weights from {}, with score {}'.format(best_weightspath, best_score))
-        elif os.path.exists(weightspath):
-            print(weightspath)
-            weights_dict = torch.load(weightspath)
-            strumodel.load_state_dict(weights_dict['weights'])# 12)
+        if os.path.exists(utilpath):
+            try:
+                util_dict = dd.io.load(utilpath)
+                best_score = util_dict['acc_score']
+            except:
+                pass
+        if os.path.exists(weightspath):
+            #print(weightspath)
+            weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
+            strumodel.load_state_dict(weights_dict)# 12)
+            print('reload weights from {}, last best score {}'.format(weightspath, best_score))
 
     Matinfo = StruExtractor.getMatinfo_volume() # call this function to generate nece info
     datainfo = Matinfo['datainfo']
@@ -343,7 +355,7 @@ def train_blocks_double(params, args=None):
 
     display_count = 0
     batch_count = 0
-    model_dict = {}
+
     steps, vals, det_vals, seg_vals = [], [], [], []
     for epochNumber in range(args.maxepoch):
         if np.mod(epochNumber+1, args.refershfreq) == 0 and epochNumber!=0:
@@ -381,18 +393,18 @@ def train_blocks_double(params, args=None):
 
                 det_pred, seg_pred, value = strumodel(X_batch)
                 if args.use_weighted == 0:
-                    det_loss  =  det_creteria(to_device(det_batch[:,0:-1,:,:], strumodel.device_id, var =False) ,
-                                              to_device(det_pred,strumodel.device_id, var =False))
-                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id, var =False),
-                                              to_device(seg_pred,strumodel.device_id, var =False))
+                    det_loss  =  det_creteria(to_device(det_batch[:,0:-1,:,:], strumodel.device_id) ,
+                                              to_device(det_pred,strumodel.device_id))
+                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id),
+                                              to_device(seg_pred,strumodel.device_id))
                 else:
                     #we dont use weight mask for segmentation
                     det_batch = get_wight_mask(det_batch, weight_params)
                     
-                    det_loss  =  det_creteria(to_device(det_batch, strumodel.device_id, var =False),
-                                              to_device(det_pred,strumodel.device_id, var =False))
-                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id, var =False),
-                                              to_device(seg_pred,strumodel.device_id, var =False))
+                    det_loss  =  det_creteria(to_device(det_batch, strumodel.device_id),
+                                              to_device(det_pred, strumodel.device_id))
+                    seg_loss  =  seg_creteria(to_device(seg_batch[:,0:-1,:,:], strumodel.device_id),
+                                              to_device(seg_pred,strumodel.device_id))
                 
                 det_val = det_loss.data.cpu().numpy().mean()
                 seg_val = seg_loss.data.cpu().numpy().mean()
@@ -474,14 +486,14 @@ def train_blocks_double(params, args=None):
                 if args.use_validation and np.mod(batch_count, args.validfreq) == 0:
                     valid_det_pred, valid_seg_pred, valid_adv = strumodel.predict(valid_batch, batch_size = args.batch_size)
                     if args.use_weighted == 0:
-                        valid_det_loss  =  det_creteria(to_device(valid_det_label[:,0:-1,:,:], valid_det_pred) ,valid_det_pred)
-                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
+                        valid_det_loss  =  det_creteria(to_device(valid_det_label[:,0:-1,:,:], strumodel.device_id, var=False) ,valid_det_pred)
+                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], strumodel.device_id, var=False) ,valid_seg_pred)
                     else:
                         #we dont use weight mask for segmentation
                         valid_det_label = get_wight_mask(valid_det_label, weight_params)
 
-                        valid_det_loss  =  det_creteria(to_device(valid_det_label, pred) ,pred)
-                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], valid_seg_pred) ,valid_seg_pred)
+                        valid_det_loss  =  det_creteria(to_device(valid_det_label, strumodel.device_id, var=False),valid_det_pred)
+                        valid_seg_loss  =  seg_creteria(to_device(valid_seg_label[:,0:-1,:,:], strumodel.device_id, var=False) ,valid_seg_pred)
 
                     valid_total_loss = valid_det_loss +  valid_seg_loss
 
@@ -491,9 +503,11 @@ def train_blocks_double(params, args=None):
                     if valid_loss <=  best_score:
                         best_score = valid_loss
                         print('update to new best_score: {}'.format(best_score))
-                        model_dict['weights'] = strumodel.state_dict()
-                        model_dict['acc_score'] = best_score
+                        model_dict = strumodel.state_dict()
+                        util_dict['acc_score'] = best_score
                         torch.save(model_dict, best_weightspath)
+                        dd.io.save(utilpath, util_dict)
+                        print('Save weights to: ', best_weightspath )
                         count_ = 0
                     else:
                         count_ = count_ + 1
@@ -502,14 +516,15 @@ def train_blocks_double(params, args=None):
                     #        print('weights have been reset to best_weights!')
                     if count_ >= tolerance:
                         assert 0, 'performance not imporoved for so long'
-                    torch.save(model_dict, best_weightspath)
+                    #torch.save(model_dict, best_weightspath)
                 
-                model_dict['weights'] = strumodel.state_dict()
+                model_dict = strumodel.state_dict()
                 torch.save(model_dict, weightspath)
                 print('Save weights to: ', weightspath )
 
-            model_dict['weights'] = strumodel.state_dict()
+            model_dict = strumodel.state_dict()
             torch.save(model_dict, weightspath)
+            print('Save weights to: ', weightspath)
 
 def display_loss(steps, values, plot=None, name='default', legend= None):
     if plot is None:

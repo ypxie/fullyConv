@@ -40,12 +40,14 @@ parser.add_argument('--showseg', action='store_false', default=False, help='show
 parser.add_argument('--resizeratio', default=1, help='If you want to resize the original test image.')
 
 parser.add_argument('--printImg', action='store_false', default=True, help='If you want to print the resulting images.')
-parser.add_argument('--runTest',  action='store_false', default=False, help='If you want to test the image for reslst.')
+parser.add_argument('--runTest',  action='store_false', default=True, help='If you want to test the image for reslst.')
 parser.add_argument('--runEval',  action='store_false', default=True, help='If you want to run the evaluation code.')
 
-parser.add_argument('--lenpool', default=[5,7,9,11,13], help='pool of length to get local maxima.')
-#parser.add_argument('--thresh_pool', default = np.arange(0.05, 0.4, 0.05), help='pool of length to get local maxima.')
-parser.add_argument('--thresh_pool', default = [0.25, 0.3], help='pool of length to get local maxima.')
+parser.add_argument('--indvidual',  action='store_false', default=False, help='If you want to run individual model.')
+
+parser.add_argument('--lenpool', default=[5,7,9,11,13, 15,17], help='pool of length to get local maxima.')
+parser.add_argument('--thresh_pool', default = np.arange(0.05, 0.9, 0.05), help='pool of length to get local maxima.')
+#parser.add_argument('--thresh_pool', default = [0.25, 0.3], help='pool of length to get local maxima.')
 #parser.add_argument('--seg_thresh_pool', default = [0.3], help='pool of length to get local maxima.')
 parser.add_argument('--img_channels', type=int, default=3, metavar='N', help='Input image channel.')
 
@@ -54,6 +56,9 @@ args = parser.parse_args()
 det_model = build_model()
 if args.cuda:
     det_model.cuda()
+
+def get_resultmask(trainingset, model_folder, weightname):
+    return  trainingset + '_' + model_folder + '_' + weightname
 
 def test_worker(testingpool, det_model, testingimageroot):
     testingParam = {}
@@ -73,8 +78,7 @@ def test_worker(testingpool, det_model, testingimageroot):
         Seedrefresh = this_test.Seedrefresh
 
         weights_name_noext, _ = os.path.splitext(weights_name)
-
-        resultmask = det_model_folder + '_' + weights_name_noext
+        resultmask = get_resultmask(this_test.trainingset, det_model_folder, weights_name_noext)
         testingimagefolder = os.path.join(testingimageroot, testingset)
         savefolder = os.path.join(testingimagefolder, resultmask)
         if not os.path.exists(savefolder):
@@ -84,8 +88,8 @@ def test_worker(testingpool, det_model, testingimageroot):
         det_weightspath = os.path.join(det_modelfolder, weights_name)
         ModelDict = {}
         print(det_weightspath)
-        weights_dict = torch.load(det_weightspath)
-        det_model.load_state_dict(weights_dict['weights'])  # 12)
+        weights_dict = torch.load(det_weightspath,map_location=lambda storage, loc: storage)
+        det_model.load_state_dict(weights_dict)  # 12)
 
         ModelDict['model'] = det_model
 
@@ -117,14 +121,13 @@ def test_worker(testingpool, det_model, testingimageroot):
 
 if __name__ == "__main__":
     dataroot = os.path.join(projroot, 'Data')
-    modelroot = os.path.join(dataroot, 'Model', 'Nature')
+    modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'Nature' ,'TestingData')
+    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset det_model_folder weights_name Probrefresh Seedrefresh')
 
     testing_folders = np.array([
-                            #('All')
                              ('AdrenalGland'),
                              ('Bladder'),
                              ('Breast'),
@@ -151,7 +154,7 @@ if __name__ == "__main__":
                              ('Testis'),
                              ('Thyroid')
                         ])
-    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', 'multicontex' ,'weights.pth',  True, True]
+    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', 'multicontex' ,'best_weights.pth',  True, True]
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []
@@ -159,11 +162,15 @@ if __name__ == "__main__":
         for this_foldername in testing_folders:
             this_pool = template_pool[:]
             this_pool[0] = this_foldername
+            if args.indvidual:
+                this_pool[2] = this_foldername
+            
             testing_pool.append(test_tuple(*this_pool))
+
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'Nature' ,'Experiments','evaluation')
+        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
         
@@ -176,13 +183,11 @@ if __name__ == "__main__":
             det_model_folder = template_tuple.det_model_folder
 
             weights_name_noext, _ = os.path.splitext(weights_name)
-
-            resultmask = det_model_folder + '_' + weights_name_noext
-
+            resultmask = get_resultmask(template_tuple.trainingset, det_model_folder, weights_name_noext)
             this_folder = os.path.join(testingimageroot, this_foldername)
             resfolder   = os.path.join(this_folder, resultmask)
             eval_folder(imgfolder= this_folder, resfolder= resfolder,savefolder= savefolder,
-                        radius=16, resultmask = 'multicontex',thresh_pool=args.thresh_pool,
+                        radius=16, resultmask = '',thresh_pool=args.thresh_pool,
                         len_pool= args.lenpool, imgExt=['.tif', '.jpg','.png'],contourname='Contours')
     #testingpool = [
                     #test_tuple('LymphNodes', ['.tif'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),
