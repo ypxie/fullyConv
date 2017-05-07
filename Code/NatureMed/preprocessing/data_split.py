@@ -6,17 +6,21 @@ HomeDir = os.path.expanduser('~')
 NatureDataDir = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData')
 YuanpuTrainingDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'TrainingData')
 YuanpuValidationDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'ValidationData')
-PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
-PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
+
+# PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
+# PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
+PingjunTrainingDataDir = os.path.join(HomeDir, 'Test', 'TrainingData')
+PingjunValidationDataDir = os.path.join(HomeDir, 'Test', 'ValidationData')
+
 DiseaseNames = ['AdrenalGland', 'Bladder', 'Breast', 'Colorectal', 'Eye', 'Kidney',
                 'Lung', 'Ovary', 'Pleura', 'Skin', 'Stomach', 'Thymus',
                 'Uterus', 'BileDuct', 'Brain', 'Cervix', 'Esophagus', 'HeadNeck',
                 'Liver', 'LymphNodes', 'Pancreas', 'Prostate', 'SoftTissue', 'Testis',
                 'Thyroid']
+
 NumberSamples = 5
 ExtraDiseaseNum = 3
 ImgFormats = ['tif', 'png', 'jpg']
-
 
 def get_image_names(img_dir, img_formats):
     img_list = []
@@ -36,7 +40,7 @@ def data_random_select(disease_name, sample_num):
     return selected_list
 
 if __name__ == '__main__':
-    seed_value = 1236
+    seed_value = 1234
     np.random.seed(seed_value)
     # random select disease
     select_disease = np.random.choice(DiseaseNames)
@@ -105,5 +109,4 @@ if __name__ == '__main__':
         # link to validation
         ln_dst_dir = os.path.join(PingjunValidationDataDir, select_disease, cur_g_folder)
         os.system("ln -s " + ln_src_dir + ' ' + ln_dst_dir)
-
     f_select.close()

@@ -34,8 +34,8 @@ processes = []
 Totalnum = len(training_pool)
 
 
-process_size = 4
-device_pool = [0, 0, 0, 0]
+process_size = 2
+device_pool = [0, 0]
 
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
