@@ -10,7 +10,7 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-DiseaseName = 'Cervix'
+DiseaseName = 'Colorectal'
 BaseFolder = '/data/Pingjun/CellDetectionData'
 
 trainingDataroot = os.path.join(BaseFolder, 'NatureData', 'TrainingData', DiseaseName)
@@ -27,7 +27,7 @@ modelroot = os.path.join(BaseFolder, 'NatureModel', DiseaseName)
 #     else:
 #         pool_collection.append((DiseaseName + str(ind)))
 # training_pool = np.array(pool_collection)
-training_pool = np.array([('CervixBase'), ('CervixLiver5'), ('CervixLiver15'), ('Cervix3Extra')])
+training_pool = np.array([('ColorectalBase'), ('ColorectalEye5'), ('ColorectalEye5'), ('ColorectalEye5')])
 
 
 show_progress = 0
@@ -35,7 +35,7 @@ processes = []
 Totalnum = len(training_pool)
 
 process_size = 1
-device_pool = [2]
+device_pool = [3]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
