@@ -27,15 +27,15 @@ modelroot = os.path.join(BaseFolder, 'NatureModel', DiseaseName)
 #     else:
 #         pool_collection.append((DiseaseName + str(ind)))
 # training_pool = np.array(pool_collection)
-training_pool = np.array([('CervixBase'), ('CervixLiver5'), ('CervixLiver5'), ('CervixLiver5')])
+training_pool = np.array([('CervixBase'), ('CervixLiver5'), ('CervixLiver15'), ('Cervix3Extra')])
 
 
 show_progress = 0
 processes = []
 Totalnum = len(training_pool)
 
-process_size = 2
-device_pool = [0, 0]
+process_size = 1
+device_pool = [2]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
