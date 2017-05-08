@@ -44,14 +44,17 @@ start_m = (1 - bar_width * 2) / 2
 start_w = start_m +bar_width
 fig, ax = plt.subplots()
 
+# pdb.set_trace()
 generic = ax.bar(ind+start_m, generic_means, bar_width, color='#9cb9da', yerr=genderic_std)
 indivisual = ax.bar(ind+start_w, indivisual_means, bar_width, color='#f0c287', yerr=indivisual_std)
 
 # add some text for labels, title and axes ticks
 ax.set_ylabel('F1 score')
-ax.set_title('Comparision between generic model and indivisual model', fontsize=18, fontweight='bold')
+ax.set_title('Comparision Between Generic Model and Indivisual model', fontsize=16, fontweight='bold')
 ax.set_xticks(ind + 1.0 / 2)
 ax.set_xticklabels(DiseaseNames)
+ax.yaxis.label.set_size(14)
+ax.xaxis.label.set_size(14)
 ax.legend((generic[0], indivisual[0]), ('Generic', 'Individual'))
 ax.grid(True)
 # fig.tight_layout()
