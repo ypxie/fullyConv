@@ -16,3 +16,5 @@ temp/*
 */.ipynb_checkpoints/*
 */Testing/*
 
+
+.remote-sync.json
