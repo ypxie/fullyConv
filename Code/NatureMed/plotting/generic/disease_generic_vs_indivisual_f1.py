@@ -4,9 +4,13 @@ import matplotlib.pyplot as plt
 import glob, json
 
 ExperimentsResults = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection',
-                                  'NatureData', 'YuanpuData', 'Experiments', 'evaluation')
+                                  'NatureData', 'YuanpuData', 'Experiments')
+ResultsTest = os.path.join(ExperimentsResults, 'evaluation')
+ResultsValidation = os.path.join(ExperimentsResults, 'evaluation_validation')
+
+
 DiseaseNames = []
-for root, dirs, _ in os.walk(ExperimentsResults):
+for root, dirs, _ in os.walk(ResultsValidation):
     for d in dirs:
         DiseaseNames.append(d)
 DiseaseNum = len(DiseaseNames)
@@ -14,28 +18,43 @@ DiseaseNum = len(DiseaseNames)
 generic_means, genderic_std = [], []
 indivisual_means, indivisual_std = [], []
 
+
 for disease_name in DiseaseNames:
-    glob_path = ExperimentsResults + '/' + disease_name + '/*.json'
+    glob_path = ResultsValidation + '/' + disease_name + '/*.json'
     f_res = glob.glob(glob_path)
     for i_f in f_res:
         f_res_name = os.path.basename(i_f)
         model_name = f_res_name[0:f_res_name.find('_')]
-        model_results = json.load(open(i_f))
-        best_acc = 0.0
-        accompany_std = 10.e10
-        for i_t in model_results.keys():
-            if model_results[i_t]['f1_mean'] > best_acc:
-                best_acc = model_results[i_t]['f1_mean']
-                accompany_std = model_results[i_t]['f1_std']
-        if model_name == 'All':
-            generic_means.append(best_acc)
-            genderic_std.append(accompany_std)
-        elif model_name == disease_name:
-            indivisual_means.append(best_acc)
-            indivisual_std.append(accompany_std)
+        val_results = json.load(open(i_f))
 
-# indivisual_means = generic_means
-# indivisual_std = genderic_std
+        best_f1 = 0.0
+        best_key = ''
+
+        for i_t in val_results.keys():
+            if val_results[i_t]['f1_mean'] > best_f1:
+                best_f1 = val_results[i_t]['f1_mean']
+                best_key = i_t
+
+        test_results = json.load(open(os.path.join(ResultsTest, disease_name, f_res_name)))
+        if model_name == 'All':
+            generic_means.append(test_results[best_key]['f1_mean'])
+            genderic_std.append(test_results[best_key]['f1_std'])
+        elif model_name == disease_name:
+            indivisual_means.append(test_results[best_key]['f1_mean'])
+            indivisual_std.append(test_results[best_key]['f1_std'])
+
+
+        # for i_t in model_results.keys():
+        #     if model_results[i_t]['f1_mean'] > best_acc:
+        #         best_acc = model_results[i_t]['f1_mean']
+        #         accompany_std = model_results[i_t]['f1_std']
+        # if model_name == 'All':
+        #     generic_means.append(best_acc)
+        #     genderic_std.append(accompany_std)
+        # elif model_name == disease_name:
+        #     indivisual_means.append(best_acc)
+        #     indivisual_std.append(accompany_std)
+
 
 # Drawing
 bar_width = 0.35                   # the width of the bars
