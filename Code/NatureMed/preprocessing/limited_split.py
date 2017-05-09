@@ -8,6 +8,8 @@ YuanpuTrainingDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'TrainingData'
 YuanpuValidationDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'ValidationData')
 PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
 PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
+
+
 # PingjunTrainingDataDir = os.path.join(HomeDir, 'Test', 'TrainingData')
 # PingjunValidationDataDir = os.path.join(HomeDir, 'Test', 'ValidationData')
 
