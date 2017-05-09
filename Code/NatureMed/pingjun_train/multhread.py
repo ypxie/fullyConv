@@ -10,7 +10,7 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-DiseaseName = 'Colorectal'
+DiseaseName = 'Breast'
 BaseFolder = '/data/Pingjun/CellDetectionData'
 
 trainingDataroot = os.path.join(BaseFolder, 'NatureData', 'TrainingData', DiseaseName)
@@ -27,23 +27,30 @@ modelroot = os.path.join(BaseFolder, 'NatureModel', DiseaseName)
 #     else:
 #         pool_collection.append((DiseaseName + str(ind)))
 # training_pool = np.array(pool_collection)
-training_pool = np.array([('ColorectalEye5'), ('ColorectalEye15'), ('Colorectal3Extra')])
+# training_pool = np.array([('ColorectalEye5'), ('ColorectalEye15'), ('Colorectal3Extra')])
+## Bladder
 
-
+# training_folders = []
+# for root, dirs, _ in os.walk(trainingDataroot):
+#     for d in dirs:
+#         training_folders.append((d, ))
+# training_pool = training_folders
+# pdb.set_trace()
+training_pool = np.array([('Breast5'), ('Breast5Esophagus5'), ('Breast5Esophagus15'), ('Breast5Esophagus5Pancreas5Eye5'),
+                          ('Breast5Uterus5'), ('Breast5Uterus15'), ('Breast5Uterus5Lung5HeadNeck5')])
 show_progress = 0
 processes = []
 Totalnum = len(training_pool)
 
-process_size = 1
-device_pool = [1]
+process_size = 3
+device_pool = [0, 0, 3]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
     print(select_pool)
     for idx, (dataset, device) in enumerate(zip(select_pool,device_pool)):
-        train_worker(trainingDataroot, validationDataroot, dataset, modelroot, device, show_progress)
-
-        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot, device, show_progress))
+        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot,
+                                                  device, show_progress, 'multicontex',True, 128))
         p.start()
         processes.append(p)
     for p in processes:

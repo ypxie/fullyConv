@@ -11,8 +11,6 @@ for root, dirs, _ in os.walk(ExperimentsResults):
         DiseaseNames.append(d)
 DiseaseNum = len(DiseaseNames)
 
-###
-cur_disease = 'Thymus'
 
 DetectModel = dict()
 DetectModel['Cervix'] = ['CervixBase', 'CervixLiver5', 'CervixLiver15', 'Cervix3Extra', 'Cervix', 'All']
@@ -61,7 +59,7 @@ ind = np.arange(0, 2*len(DetectModel.keys()), 2)        # the x locations for th
 
 start_m = (2 - bar_width * 6) / 2
 start_w = start_m + bar_width
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(20, 15))
 
 # pdb.set_trace()
 base = ax.bar(ind+start_m*1, base_means, bar_width, color='#369ead', yerr=base_std)
@@ -80,8 +78,7 @@ ax.set_xticklabels(DetectModel.keys())
 ax.yaxis.label.set_size(14)
 ax.xaxis.label.set_size(14)
 ax.legend((base[0], disease5[0], disease15[0], disease35[0], disease[0], generic[0]),
-          ('Base', 'Base+Extra5', 'Base+Extra15', 'Base+Extra3*5', 'Indivisual', 'Generic'))
+          ('Base', 'Base+1Extra5', 'Base+1Extra15', 'Base+3Extra*5', 'Indivisual', 'Generic'))
 ax.set_ylim([0.0, 1.0])
 ax.grid(True)
-# fig.tight_layout()
 plt.show()

@@ -16,8 +16,6 @@ assert DiseaseNum == 25
 
 # Collecting F1-score across all threshold values for all disease
 pr_dict = dict()
-# pr_dict['generic'] = []
-# pr_dict['indivisual'] = []
 all_generic = []
 all_indivisual = []
 for cur_d in DiseaseNames:
@@ -52,14 +50,10 @@ for cur_d in DiseaseNames:
             pr_dict[cur_d]['generic']['thresh'] = thresh_list
             pr_dict[cur_d]['generic']['f1score'] = f1score_list
             all_generic.append(f1score_list)
-            # pr_dict['generic'].append(f1score_list)
         elif model_name == cur_d:
             pr_dict[cur_d]['indivisual']['thresh'] = thresh_list
             pr_dict[cur_d]['indivisual']['f1score'] = f1score_list
-            # pr_dict['indivisual'].append(f1score_list)
             all_indivisual.append(f1score_list)
-
-
 
 # for cur_d in DiseaseNames:
 #     cur_f1 = pr_dict[cur_d]['generic']['f1score']
@@ -68,7 +62,6 @@ for cur_d in DiseaseNames:
 # pdb.set_trace()
 
 ## Drawing
-# plt.rc('lines', linewidth=2)
 fig, (ax0, ax1) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(24, 10))
 # fig.suptitle('F1 Score of Generic Model and Indivisual Across Threshold', fontsize=16, fontweight='bold')
 # draw generic f1-score all diseases
@@ -76,19 +69,15 @@ for cur_d in pr_dict.keys():
     ax0.plot(pr_dict[cur_d]['generic']['thresh'], pr_dict[cur_d]['generic']['f1score'], color='k', linewidth=2)
     ax1.plot(pr_dict[cur_d]['indivisual']['thresh'], pr_dict[cur_d]['indivisual']['f1score'], color='k', linewidth=2)
 
-# # draw average
-# avg_generic = [np.average(x) for x in zip(*pr_dict['generic'])]
-# avg_indivisual = [np.average(x) for x in zip(*pr_dict['indivisual'])]
-# ax0.plot(thresh_list, avg_generic, color='r')
-# ax1.plot(thresh_list, avg_indivisual, color='r')
+#draw average
 avg_generic = [np.average(x) for x in zip(*all_generic)]
 std_generic = [np.std(x) for x in zip(*all_generic)]
 avg_indivisual = [np.average(x) for x in zip(*all_indivisual)]
 std_indivisual = [np.std(x) for x in zip(*all_indivisual)]
-# ax0.plot(thresh_list, avg_generic, color='r', linewidth=3)
-# ax1.plot(thresh_list, avg_indivisual, color='r', linewidth=3)
-ax0.errorbar(thresh_list, avg_generic, yerr=std_generic, color='r', linewidth=3, zorder=10)
-ax1.errorbar(thresh_list, avg_indivisual, yerr=std_indivisual, color='r', linewidth=3, zorder=10)
+# ax0.errorbar(thresh_list, avg_generic, yerr=std_generic, color='r', linewidth=3, zorder=10)
+# ax1.errorbar(thresh_list, avg_indivisual, yerr=std_indivisual, color='r', linewidth=3, zorder=10)
+ax0.errorbar(thresh_list, avg_generic, color='r', linewidth=3, zorder=10)
+ax1.errorbar(thresh_list, avg_indivisual, color='r', linewidth=3, zorder=10)
 
 
 diseaseArtist = plt.Line2D((0,1), (0,0), color='k', linewidth=2)
@@ -116,6 +105,4 @@ ax0.text(0.05, 0.95, 'A', transform=ax0.transAxes, size=16, weight='bold')
 ax1.text(0.05, 0.95, 'B', transform=ax1.transAxes, size=16, weight='bold')
 ax0.grid(True)
 ax1.grid(True)
-# fig.tight_layout()
-
 plt.show()

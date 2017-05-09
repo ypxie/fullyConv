@@ -45,17 +45,17 @@ for ind, cur_model in enumerate(ModelNames):
         pr_dict['Generic']['recall'] = cur_recall_list
         pr_dict['Generic']['precision'] = cur_precision_list
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(10, 8))
 line0, = ax.plot(pr_dict['Base']['recall'], pr_dict['Base']['precision'], linewidth=3, color='#e54c4c', label='Base')
 line1, = ax.plot(pr_dict['BaseExtra5']['recall'], pr_dict['BaseExtra5']['precision'], linewidth=3, color='#99f052', label='BaseExtra5')
 line2, = ax.plot(pr_dict['BaseExtra15']['recall'], pr_dict['BaseExtra15']['precision'], linewidth=3, color='#5f5f5f', label='BaseExtra15')
 line3, = ax.plot(pr_dict['BaseExtra35']['recall'], pr_dict['BaseExtra35']['precision'], linewidth=3, color='#99a3eb', label='BaseExtra35')
-line4, = ax.plot(pr_dict['Indivisual']['recall'], pr_dict['Indivisual']['precision'], linewidth=3, color='#b34c70', label='Indivisual')
+line4, = ax.plot(pr_dict['Indivisual']['recall'], pr_dict['Indivisual']['precision'], linewidth=3, color='#4cb399', label='Indivisual')
 line5, = ax.plot(pr_dict['Generic']['recall'], pr_dict['Generic']['precision'], linewidth=3, color='#4c4cc2', label='Generic')
 
 ax.set(xlabel='Recall', ylabel='Precision')
 ax.set_xlim([0.0, 1.0])
-ax.set_ylim([0.2, 1.0])
+ax.set_ylim([0.0, 1.0])
 ax.xaxis.label.set_size(14)
 ax.yaxis.label.set_size(14)
 ax.legend(loc='lower left')

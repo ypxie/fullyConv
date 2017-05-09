@@ -45,13 +45,12 @@ for cur_d in DiseaseNames:
 
 
 ## Drawing
-plt.rc('lines', linewidth=2)
 fig, (ax0, ax1) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(24, 10))
 # fig.suptitle('Precision Recall Curve of Generic Model and Indivisual Model', fontsize=16, fontweight='bold')
 # draw generic f1-score all diseases
 for cur_d in pr_dict.keys():
-    ax0.plot(pr_dict[cur_d]['generic']['recall'], pr_dict[cur_d]['generic']['precision'], color='k')
-    ax1.plot(pr_dict[cur_d]['indivisual']['recall'], pr_dict[cur_d]['indivisual']['precision'], color='k')
+    ax0.plot(pr_dict[cur_d]['generic']['recall'], pr_dict[cur_d]['generic']['precision'], color='k', linewidth=2)
+    ax1.plot(pr_dict[cur_d]['indivisual']['recall'], pr_dict[cur_d]['indivisual']['precision'], color='k', linewidth=2)
 
 ax0.set_xlim([0.0, 1.0])
 ax0.set_ylim([0.0, 1.0])
@@ -67,6 +66,5 @@ ax0.text(-0.1, 0.95, 'A', transform=ax0.transAxes, size=16, weight='bold')
 ax1.text(-0.1, 0.95, 'B', transform=ax1.transAxes, size=16, weight='bold')
 ax0.grid(True)
 ax1.grid(True)
-# fig.tight_layout()
 
 plt.show()
