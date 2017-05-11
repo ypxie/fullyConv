@@ -16,32 +16,32 @@ validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData','Yuanpu
 modelroot = os.path.join(projroot, 'Data','NatureModel','YuanpuModel')
 
 training_pool = np.array([
-                 ('All'),
-                 ('AdrenalGland'),
-                 ('Bladder'),
-                 ('Breast'),
-                 ('Colorectal'),
-                 ('Eye'),
-                 ('Kidney'),
-                 ('Lung'),
-                 ('Ovary'),
-                 ('Pleura'),
-                 ('Skin'),
-                 ('Stomach'),
-                 ('Thymus'),
-                 ('Uterus'),
-                 ('BileDuct'),
-                 ('Brain'),
-                 ('Cervix'),
-                 ('Esophagus'),
-                 ('HeadNeck'),
-                 ('Liver'),
-                 ('LymphNodes'),
-                 ('Pancreas'),
-                 ('Prostate'),
-                 ('SoftTissue'),
-                 ('Testis'),
-                 ('Thyroid')
+                 ('All')
+                #  ('AdrenalGland'),
+                #  ('Bladder'),
+                #  ('Breast'),
+                #  ('Colorectal'),
+                #  ('Eye'),
+                #  ('Kidney'),
+                #  ('Lung'),
+                #  ('Ovary'),
+                #  ('Pleura'),
+                #  ('Skin'),
+                #  ('Stomach'),
+                #  ('Thymus'),
+                #  ('Uterus'),
+                #  ('BileDuct'),
+                #  ('Brain'),
+                #  ('Cervix'),
+                #  ('Esophagus'),
+                #  ('HeadNeck'),
+                #  ('Liver'),
+                #  ('LymphNodes'),
+                #  ('Pancreas'),
+                #  ('Prostate'),
+                #  ('SoftTissue'),
+                #  ('Testis'),
+                #  ('Thyroid')
                 ])
 
 show_progress = 0
@@ -49,7 +49,7 @@ processes = []
 Totalnum = len(training_pool)
 
 process_size = 9
-device_pool = [3,3,2,2,2,2,0,0,0]
+device_pool = [3,3,3,2,2,2,0,0,0]
 
 for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
