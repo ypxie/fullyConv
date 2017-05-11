@@ -71,6 +71,7 @@ generic = ax.bar(ind+start_m*6, generic_means, bar_width, color='#c8b631', yerr=
 
 
 # add some text for labels, title and axes ticks
+ax.set_xlabel('Randomly selected three diseases')
 ax.set_ylabel('F1 score')
 # ax.set_title('Comparision Between Generic Model and Indivisual model', fontsize=16, fontweight='bold')
 ax.set_xticks(ind + 1.0)
