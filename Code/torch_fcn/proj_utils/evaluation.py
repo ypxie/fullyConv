@@ -9,17 +9,18 @@ from scipy.io import loadmat
 import json
 from numba import jit, autojit
 import matplotlib.pyplot as plt
-
+import deepdish as dd
 import numpy as np
 from numpy.core.umath_tests import inner1d
 # A = np.array([[1,2],[3,4],[5,6],[7,8]])
 # B = np.array([[2,3],[4,5],[6,7],[8,9],[10,11]])
 
 def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16, resultmask = '',
-               thresh_pool = [0.25], len_pool = [5],imgExt =['.tif'], contourname = 'Contours'):
+                thresh_pool = [0.25], len_pool = [5],imgExt =['.tif'], contourname = 'Contours', 
+                matExt=["",'_withcontour', '_gt','_seg']):
     #resultmask is just added for legency compatability
-
-    _, img_pool = getfilelist(imgfolder, imgExt)
+    print('Currently evaluating: ', imgfolder)
+    img_list, img_pool = getfilelist(imgfolder, imgExt)
     
     num_img, num_thresh, num_len = len(img_pool), len(thresh_pool), len(len_pool)
     
@@ -31,19 +32,21 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
     distance_res = [[None]*num_len]*num_thresh
 
     res_json = {}
-    save_path = os.path.join(savefolder, 'res.json')
-
+    save_path = os.path.join(savefolder, resultmask + '_res.json')
+    save_h5path =  os.path.join(savefolder, resultmask + '_res.h5')
     for th_idx, thresh in enumerate(thresh_pool):
         for len_idx, maxlen in enumerate(len_pool):
             distance_tmp = []
             for idx, imgname in enumerate(img_pool):
-                if resultmask is not  "":
-                    resultDictPath = os.path.join(resfolder, imgname + resultmask + '.h5')
-                else:
-                    resultDictPath = os.path.join(resfolder, imgname + '.h5')
-
-                gtPath = os.path.join(imgfolder, imgname + '_withcontour.mat')
-                loaded_mt = loadmat(gtPath)
+                #if resultmask is not  "":
+                #    resultDictPath = os.path.join(resfolder, imgname + resultmask + '.h5')
+                #else:
+                resultDictPath = os.path.join(resfolder, imgname + '.h5')
+                for thismatext in matExt:
+                    gtPath = os.path.join(imgfolder, imgname + thismatext + '.mat')
+                    if os.path.exists(gtPath):
+                       loaded_mt = loadmat(gtPath)
+                       break
                 contour_mat = loaded_mt[contourname].tolist()[0]
                 seeds_list = [np.mean(a,1) for a in contour_mat]
                 gt_xy = np.stack(seeds_list, 0) # (nsamples * 2)
@@ -52,12 +55,21 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
                 gt[:, 1] = gt_xy[:, 0]
                 resultDict = dd.io.load(resultDictPath)
 
-                key_name = get_seed_name(1, thresh, maxlen, resultmask)
+                key_name = get_seed_name(1, thresh, maxlen)
                 thisresult = resultDict[key_name]
 
-                impath = os.path.join(imgfolder, imgname + '.jpg')
-                
-                (pre, rec, f1), distance, difference, (valid_res, valid_gt) = detect_eval(thisresult, gt, radius)
+                imgpath = img_list[idx]
+                #thisImg = imread(imgpath)
+                #imgrow, imgcol = thisImg.shape[0:2]
+                if thisresult.shape[0] == 0:
+                    print('You have zero detected seeds.')
+                    thisresult = np.array([[-1000,-1000]])
+                if gt.shape[0] == 0:
+                    print('You have zero ground truth seeds.')
+                    gt = np.array([[-1000,-1000]])
+                    
+                (pre, rec, f1), distance, difference, (valid_res, valid_gt) = \
+                                detect_eval(thisresult, gt, radius)
                 res_true = thisresult[valid_res]
 
                 #plt.figure('showres')
@@ -89,8 +101,8 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
             f1_mean = np.mean(f1_res[:,th_idx, len_idx])
             f1_std  = np.std(f1_res[:,th_idx, len_idx])
 
-            marker = 'thresh_{a}_len_{b}_radius_{r}'.format(a=thresh, b=maxlen, r= radius)
-
+            #marker = 'thresh_{a}_len_{b}_radius_{r}'.format(a=thresh, b=maxlen, r= radius)
+            marker = 'thresh_' + '{:01.02f}'.format(thresh) + '_len_' + '{:02d}'.format(maxlen) + '_radius_'+  '{:02.02f}'.format(radius)
             res_json[marker]  = {
                 "f1_mean":f1_mean,
                 "f1_std":f1_std,
@@ -110,13 +122,14 @@ def eval_folder(imgfolder = '.', resfolder = '.', savefolder = '.', radius = 16,
 
     with open(save_path, 'w') as outfile:
         json.dump(res_json, outfile)
-    
+    #dd.io.save(save_h5path, res_json)
 
 def detect_eval(res, gt, radius):
     '''
     res: N*2 tensor for (row, col) seeds.
     gt:  N*2 tensor for (row, col) gt seeds.
     '''
+
     num_det = res.shape[0]
     num_gt  = gt.shape[0]
     valid_row, valid_col = graph_match(res, gt, radius)
@@ -124,10 +137,12 @@ def detect_eval(res, gt, radius):
     TP = len(valid_row)
     FP = num_det - len(valid_row)
     FN = num_gt  - len(valid_row)
+    
 
-    pre = float(TP)/(TP + FP)
-    rec = float(TP)/(TP + FN)
-    f1 = (2.0*pre*rec)/(pre+rec)
+    pre = float(TP)/(TP + FP + 1e-10)
+    rec = float(TP)/(TP + FN + 1e-10)
+    f1 = (2.0*pre*rec)/(pre+rec + 1e-10)
+    #spec = float(TN)/(FP + TN + 1e-10)
 
     matched_res = res[valid_row]
     matched_gt  = gt[valid_col]
@@ -145,7 +160,7 @@ def graph_match(res, gt, radius):
     '''
     num_det = res.shape[0]
     num_gt  = gt.shape[0]
-
+    
     distmatrix = pairwise_distances(res, gt,metric = 'euclidean')
     #distmatrix[distmatrix > radius] = np.Inf
     #paddist = np.zeros((distmatrix.shape[0] + 1,distmatrix.shape[1] + 1))

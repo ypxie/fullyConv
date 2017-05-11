@@ -82,8 +82,8 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
         strumodel.cuda(device)
 
     #opt = optim.Adadelta(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay))
-    #opt = optim.SGD(strumodel.parameters(), lr=args.lr, momentum=0.9, nesterov = True, weight_decay=args.weight_decay)
-    opt = optim.Adamax(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    opt = optim.SGD(strumodel.parameters(), lr=args.lr, momentum=0.9, nesterov = True, weight_decay=args.weight_decay)
+    #opt = optim.Adamax(strumodel.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     
     classparams = {}
     classparams['patchsize']   = args.patchsize

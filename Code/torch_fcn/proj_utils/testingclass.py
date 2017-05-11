@@ -22,7 +22,7 @@ from .post_processing import *
 from .local_utils import *
 
 def get_seed_name(step, threshhold, min_len, resultmask=""):
-    if resultmask is not '':
+    if resultmask is not '': # simply for legancy consideration
         resultmask = resultmask + '_'
     name  =(resultmask + 's_' + '{:02d}'.format(step) + '_t_'   + '{:01.02f}'.format(threshhold) \
              + '_r_'+  '{:02.02f}'.format(min_len)).replace('.','_')
