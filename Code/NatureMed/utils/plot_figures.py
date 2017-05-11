@@ -24,8 +24,8 @@ device = 0
 strumodel = build_model()
 strumodel.cuda(device)
 
-weights_dict = torch.load(weightspath)
-strumodel.load_state_dict(weights_dict['weights'])# 12)
+weights_dict = torch.load(weightspath,map_location=lambda storage, loc: storage)
+strumodel.load_state_dict(weights_dict)# 12)
 
 tester = runtestImg({'model': strumodel})
 plot = Visdom()
@@ -99,9 +99,9 @@ for this_tuple in tuple_list:
 
     this_marker = sub_folder + '_' + img_name
     plot.image(img_org.transpose(2,0,1),     opts=dict(title = this_marker))
-    plot.heatmap(X=VotingMap, win= this_marker + '_prediction', opts=dict(title=this_marker + '_prediction'))
-    plot.heatmap(X=predMap,   win= this_marker + '_groundTruth', opts=dict(title=this_marker + '_groundTruth'))
-    imshow(VotingMap)
+    plot.heatmap(X=np.flipud(VotingMap), win= this_marker + '_prediction', opts=dict(title=this_marker + '_prediction'))
+    plot.heatmap(X=np.flipud(predMap),   win= this_marker + '_groundTruth', opts=dict(title=this_marker + '_groundTruth'))
+    #imshow(VotingMap)
 
 
 
