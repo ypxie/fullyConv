@@ -86,5 +86,5 @@ if __name__ == '__main__':
         shutil.copy(img_gt, cur_g_dir)
         f_select.write(os.path.basename(img) + '\n')
     f_select.write('\n')
-    
+
     f_select.close()
