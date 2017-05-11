@@ -28,7 +28,7 @@ except:
    pass
 from numba import jit 
 
-def image_dim_ordering():
+def image_dim_ordering_():
     return 'th'
     
 def create_2d_gaussian(dim, sigma):
@@ -211,7 +211,7 @@ def array_to_img(x, dim_ordering='default', scale=True):
                          'Got array with shape:', x.shape)
 
     if dim_ordering == 'default':
-        dim_ordering = image_dim_ordering()
+        dim_ordering = image_dim_ordering_()
     if dim_ordering not in {'th', 'tf'}:
         raise ValueError('Invalid dim_ordering:', dim_ordering)
 
@@ -238,7 +238,7 @@ def array_to_img(x, dim_ordering='default', scale=True):
 
 def img_to_array(img, dim_ordering='default'):
     if dim_ordering == 'default':
-        dim_ordering = image_dim_ordering()
+        dim_ordering = image_dim_ordering_()
     if dim_ordering not in {'th', 'tf'}:
         raise ValueError('Unknown dim_ordering: ', dim_ordering)
     # Numpy array x has format (height, width, channel)
@@ -316,7 +316,7 @@ class ImageDataGenerator(object):
             and should output a Numpy tensor with the same shape.
         dim_ordering: 'th' or 'tf'. In 'th' mode, the channels dimension
             (the depth) is at index 1, in 'tf' mode it is at index 3.
-            It defaults to the `image_dim_ordering` value found in your
+            It defaults to the `image_dim_ordering_` value found in your
             Keras config file at `~/.keras/keras.json`.
             If you never set it, then it will be "th".
     '''
@@ -344,7 +344,7 @@ class ImageDataGenerator(object):
                  transform_label = True,
                  dim_ordering='default'):
         if dim_ordering == 'default':
-            dim_ordering = image_dim_ordering()
+            dim_ordering = image_dim_ordering_()
         self.__dict__.update(locals())
         self.mean = None
         self.std = None
@@ -605,7 +605,7 @@ class NumpyArrayIterator(Iterator):
                  dim_ordering='default', elastic_label=True,
                  save_to_dir=None, save_prefix='', save_format='jpeg', **kwargs):
         if dim_ordering == 'default':
-            dim_ordering = image_dim_ordering()
+            dim_ordering = image_dim_ordering_()
         self.X = np.asarray(X)
         
         if self.X.ndim != 4:
