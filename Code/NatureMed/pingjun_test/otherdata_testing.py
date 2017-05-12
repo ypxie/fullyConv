@@ -119,23 +119,22 @@ if __name__ == "__main__":
     all_modelroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'YuanpuModel')
     other_modelroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'OtherModel')
 
-    #modelname = 'multicontex'
-    #weights_name = 'best_weights.pth'
+    if args.indvidual == False:  # Generic model
+        modelname = 'multicontex'
+        weights_name = 'best_weights.pth'
+    else:
+        # indivisual model
+        modelname    = 'multicontex_ind'
+        weights_name = 'weights.pth'
+        # # fine-tuned model
+        # modelname    = 'multicontex'
+        # weights_name = 'weights.pth'
 
-    modelname    = 'multicontex_ind'
-    weights_name = 'weights.pth'
-
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','OtherData', 'TestingData')
+    testingimageroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','OtherData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset  modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
-    testing_folders = np.array([
-                             ('BM'),
-                             ('brain'),
-                             ('breast'),
-                             ('NET'),
-                             ('phasecontrast')
-                        ])
+    testing_folders = np.array([('BM'), ('brain'), ('breast'), ('NET'), ('phasecontrast')])
     template_pool = [None, ['.tif', '.png', '.jpg'], None, None, modelname , weights_name,  True, True]
     template_tuple =  test_tuple(*template_pool)
 
@@ -155,7 +154,7 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation_other')
+        saveroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','YuanpuData','Experiments','evaluation_other')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
 

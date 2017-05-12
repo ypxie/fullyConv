@@ -147,7 +147,7 @@ if __name__ == "__main__":
                              ('Testis'),
                              ('Thyroid')
                         ])
-    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', modelroot,'multicontex' ,'best_weights.pth',  True, True]
+    template_pool = [None, ['.tif', '.png', '.jpg'], 'All', modelroot, 'multicontex' ,'best_weights.pth',  True, True]
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []

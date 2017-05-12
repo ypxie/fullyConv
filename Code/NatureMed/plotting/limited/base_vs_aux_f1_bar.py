@@ -13,9 +13,14 @@ DiseaseNum = len(DiseaseNames)
 
 
 DetectModel = dict()
-DetectModel['Cervix'] = ['CervixBase', 'CervixLiver5', 'CervixLiver15', 'Cervix3Extra', 'Cervix', 'All']
-DetectModel['Colorectal'] = ['ColorectalBase', 'ColorectalEye5', 'ColorectalEye15', 'Colorectal3Extra', 'Colorectal', 'All']
-DetectModel['Thymus'] = ['ThymusBase', 'ThymusThyroid5', 'ThymusThyroid15', 'Thymus3Extra', 'Thymus', 'All']
+# DetectModel['Cervix'] = ['CervixBase', 'CervixLiver5', 'CervixLiver15', 'Cervix3Extra', 'Cervix', 'All']
+# DetectModel['Colorectal'] = ['ColorectalBase', 'ColorectalEye5', 'ColorectalEye15', 'Colorectal3Extra', 'Colorectal', 'All']
+# DetectModel['Thymus'] = ['ThymusBase', 'ThymusThyroid5', 'ThymusThyroid15', 'Thymus3Extra', 'Thymus', 'All']
+DetectModel['Breast'] = ['Breast5', 'Breast5Esophagus5', 'Breast5Uterus5', 'Breast5Esophagus15', 'Breast5Uterus15',
+                         'Breast5Esophagus5Pancreas5Eye5', 'Breast5Uterus5Lung5HeadNeck5', 'Breast', 'All']
+DetectModel['Esophagus'] = ['Esophagus5', 'Esophagus5AdrenalGland5', 'Breast5Uterus5', 'Breast5Esophagus15', 'Breast5Uterus15',
+                         'Breast5Esophagus5Pancreas5Eye5', 'Breast5Uterus5Lung5HeadNeck5', 'Breast', 'All']
+
 
 base_means, base_std = [], []
 disease5_means, disease5_std = [], []
@@ -27,6 +32,7 @@ generic_means, generic_std = [], []
 
 best_key = 'thresh_0.75_len_11_radius_16.00'
 surfix = '_multicontex_best_weights_res.json'
+
 for cur_d in DetectModel.keys():
     for ind, cur_model in enumerate(DetectModel[cur_d]):
         cur_f = os.path.join(ExperimentsResults, cur_d, cur_model+surfix)
