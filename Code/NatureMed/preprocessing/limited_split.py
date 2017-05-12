@@ -2,8 +2,8 @@ import os, sys, pdb
 import numpy as np
 import glob, shutil
 
-HomeDir = os.path.expanduser('~')
-NatureDataDir = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+NatureDataDir = os.path.join(BaseDir, 'NatureData')
 YuanpuTrainingDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'TrainingData')
 YuanpuValidationDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'ValidationData')
 PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')

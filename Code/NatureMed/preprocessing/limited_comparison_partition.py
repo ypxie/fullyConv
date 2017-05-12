@@ -2,15 +2,16 @@ import os, sys, pdb
 import numpy as np
 import glob, shutil, copy
 
-HomeDir = os.path.expanduser('~')
-NatureDataDir = os.path.join(HomeDir, 'Dropbox', 'GenericCellDetection', 'NatureData')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+NatureDataDir = os.path.join(BaseDir, 'NatureData')
 YuanpuTrainingDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'TrainingData')
 YuanpuValidationDataDir = os.path.join(NatureDataDir, 'YuanpuData', 'ValidationData')
 
-# PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
-# PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
-PingjunTrainingDataDir = os.path.join(HomeDir, 'Test', 'TrainingData')
-PingjunValidationDataDir = os.path.join(HomeDir, 'Test', 'ValidationData')
+PingjunTrainingDataDir = os.path.join(NatureDataDir, 'PingjunData', 'TrainingData')
+PingjunValidationDataDir = os.path.join(NatureDataDir, 'PingjunData', 'ValidationData')
+
+# PingjunTrainingDataDir = os.path.join(HomeDir, 'Test', 'TrainingData')
+# PingjunValidationDataDir = os.path.join(HomeDir, 'Test', 'ValidationData')
 
 DiseaseNames = ['AdrenalGland', 'Bladder', 'Breast', 'Colorectal', 'Eye', 'Kidney',
                 'Lung', 'Ovary', 'Pleura', 'Skin', 'Stomach', 'Thymus',
