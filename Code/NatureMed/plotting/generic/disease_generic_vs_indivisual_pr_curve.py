@@ -3,9 +3,11 @@ import numpy as np
 import glob, shutil, json
 import matplotlib.pyplot as plt
 
+
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments', 'evaluation')
 select_len = '_len_11_'
-ExperimentsResults = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection',
-                                  'NatureData', 'YuanpuData', 'Experiments', 'evaluation')
+
 DiseaseNames = []
 for root, dirs, _ in os.walk(ExperimentsResults):
     for d in dirs:

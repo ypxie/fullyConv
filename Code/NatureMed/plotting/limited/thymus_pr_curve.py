@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, json
 
-ExperimentsResults = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection',
-                                  'NatureData', 'YuanpuData', 'Experiments', 'evaluation_pinjun')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments', 'evaluation_pinjun')
+
 ModelNames = ['ThymusBase', 'ThymusThyroid5', 'ThymusThyroid15', 'Thymus3Extra', 'Thymus', 'All']
 surfix = '_multicontex_best_weights_res.json'
 select_len = '_len_11_'

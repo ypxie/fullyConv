@@ -3,14 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, json
 
-
 BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
 ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments', 'evaluation_other')
 
-ModelNames = ['All_multicontex_best', 'brain_multicontex_ind', 'brain_multicontex']
+# set disease for drawing
+DiseaseName = 'BM'
+ModelNames = ['All_multicontex_best', DiseaseName + '_multicontex_ind', DiseaseName + '_multicontex']
 surfix = '_weights_res.json'
 select_len = '_len_11_'
-DiseaseName = 'brain'
 pr_dict = dict()
 
 for ind, cur_model in enumerate(ModelNames):
@@ -49,5 +49,5 @@ ax.set_ylim([0.0, 1.0])
 ax.xaxis.label.set_size(14)
 ax.yaxis.label.set_size(14)
 ax.legend(loc='lower left')
-plt.title('Comparison of different models on Brain', fontsize=16, fontweight='bold')
+plt.title('Comparison of different models on {}'.format(DiseaseName), fontsize=16, fontweight='bold')
 plt.show()

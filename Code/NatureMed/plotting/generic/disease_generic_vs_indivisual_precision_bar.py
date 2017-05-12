@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, json
 
-ExperimentsResults = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection',
-                                  'NatureData', 'YuanpuData', 'Experiments')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments')
+
 ResultsTest = os.path.join(ExperimentsResults, 'evaluation')
 ResultsValidation = os.path.join(ExperimentsResults, 'evaluation_validation')
 
