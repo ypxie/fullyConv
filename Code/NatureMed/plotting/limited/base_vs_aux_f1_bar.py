@@ -3,14 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, json
 
-ExperimentsResults = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection',
-                                  'NatureData', 'YuanpuData', 'Experiments', 'evaluation_pinjun')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments', 'evaluation_pinjun')
+
 DiseaseNames = []
 for root, dirs, _ in os.walk(ExperimentsResults):
     for d in dirs:
         DiseaseNames.append(d)
 DiseaseNum = len(DiseaseNames)
-
 
 DetectModel = dict()
 # DetectModel['Cervix'] = ['CervixBase', 'CervixLiver5', 'CervixLiver15', 'Cervix3Extra', 'Cervix', 'All']
