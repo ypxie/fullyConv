@@ -6,11 +6,11 @@ import glob, json
 BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
 ExperimentsResults = os.path.join(BaseDir, 'NatureData', 'YuanpuData', 'Experiments', 'evaluation_pinjun')
 
-ModelNames = ['Colorectal5', 'Colorectal5Bladder5', 'Colorectal5Bladder15', 'Colorectal5Bladder5Prostate5Eye5', 'Colorectal5Testis5',
-              'Colorectal5Testis15', 'Colorectal5Testis5BileDuct5LymphNodes5', 'Colorectal', 'All']
+ModelNames = ['Ovary5', 'Ovary5Breast5', 'Ovary5Breast15', 'Ovary5Breast5HeadNeck5Thyroid5', 'Ovary5SoftTissue5',
+              'Ovary5SoftTissue15', 'Ovary5SoftTissue5Lung5Testis5', 'Ovary', 'All']
 surfix = '_multicontex_best_weights_res.json'
 select_len = '_len_11_'
-DiseaseName = 'Colorectal'
+DiseaseName = 'Ovary'
 pr_dict = dict()
 
 for ind, cur_model in enumerate(ModelNames):
@@ -84,5 +84,5 @@ ax.set_ylim([0.0, 1.0])
 ax.xaxis.label.set_size(14)
 ax.yaxis.label.set_size(14)
 ax.legend(loc='lower left')
-plt.title('Comparison of different models on Colorectal', fontsize=16, fontweight='bold')
+plt.title('Comparison of different models on Ovary', fontsize=16, fontweight='bold')
 plt.show()
