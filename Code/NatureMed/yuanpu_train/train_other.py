@@ -10,10 +10,15 @@ from torch_fcn.proj_utils.local_utils import Indexflow
 from nature_train import train_worker
 import torch.multiprocessing as mp
 
-trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'OtherData', 'TrainingData')
-validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData','YuanpuData', 'ValidationData')
+# trainingDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData', 'OtherData', 'TrainingData')
+# validationDataroot = os.path.join(home,'Dropbox','DataSet', 'NatureData','YuanpuData', 'ValidationData')
+# modelroot = os.path.join(projroot, 'Data','NatureModel','OtherModel')
+BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+trainingDataroot = os.path.join(BaseDir, 'NatureData', 'OtherData', 'TrainingData')
+validationDataroot = os.path.join(BaseDir, 'NatureData','YuanpuData', 'ValidationData')
+modelroot = os.path.join(BaseDir,'NatureModel','OtherModel')
 
-modelroot = os.path.join(projroot, 'Data','NatureModel','OtherModel')
+
 modelname = 'multicontex_ind'
 #modelname = 'multicontex'
 
@@ -36,7 +41,7 @@ for select_ind in Indexflow(Totalnum, process_size, random=False):
     select_pool = training_pool[select_ind]
     print(select_pool)
     for idx, (dataset, device) in enumerate(zip(select_pool,device_pool)):
-        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot, 
+        p = mp.Process(target=train_worker, args=(trainingDataroot, validationDataroot, dataset, modelroot,
                                                   device, show_progress, modelname,False, 128))
         p.start()
         processes.append(p)

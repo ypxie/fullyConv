@@ -119,10 +119,13 @@ def test_worker(testingpool, det_model, testingimageroot):
             tester.printCoords(threshhold=args.thresh_pool[0], step=1, min_len=args.lenpool[-1])
 
 if __name__ == "__main__":
-    dataroot = os.path.join(projroot, 'Data')
-    modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
+    # dataroot = os.path.join(projroot, 'Data')
+    # modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
+    BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+    modelroot = os.path.join(BaseDir, 'NatureModel', 'YuanpuModel')
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData', 'ValidationData')
+
+    testingimageroot = os.path.join(BaseDir, 'NatureData','YuanpuData', 'ValidationData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
@@ -157,22 +160,22 @@ if __name__ == "__main__":
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []
-    
+
     for this_foldername in testing_folders:
         this_pool = template_pool[:]
         this_pool[0] = this_foldername
         if args.indvidual:
             this_pool[2] = this_foldername
-        
+
         testing_pool.append(test_tuple(*this_pool))
     if args.runTest:
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation_validation')
+        saveroot = os.path.join(BaseDir, 'NatureData','YuanpuData','Experiments','evaluation_validation')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
-        
+
         for idx, this_foldername in enumerate(testing_folders):
             savefolder = os.path.join(saveroot, this_foldername)
             if not os.path.exists(savefolder):
@@ -193,8 +196,8 @@ if __name__ == "__main__":
                     #test_tuple('Thymus', ['.tif'], 'Com_Det',  'multicontex' ,'weights.pth',  True, True),
                     #test_tuple('Thyroid', ['.tif'], 'Com_Det',  'multicontex' ,'weights.pth',  True, True),
                     #test_tuple('Uterus', ['.tif'], 'Com_Det',  'multicontex' ,'weights.pth',  True, True)
-                    #test_tuple('Brain', ['.jpg'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),   
-                    #test_tuple('test-small', ['.png'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),   
+                    #test_tuple('Brain', ['.jpg'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),
+                    #test_tuple('test-small', ['.png'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),
                     #test_tuple('Liver', ['.tif'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True),
                     #test_tuple('Lung', ['.tif'], 'Com_Det', 'multicontex' ,'weights.pth',  True, True)
                   #]

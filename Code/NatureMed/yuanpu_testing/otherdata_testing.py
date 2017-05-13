@@ -121,17 +121,22 @@ def test_worker(testingpool, det_model, testingimageroot):
             tester.printCoords(threshhold=args.thresh_pool[0], step=1, min_len=args.lenpool[-1])
 
 if __name__ == "__main__":
-    dataroot = os.path.join(projroot, 'Data')
-    all_modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
-    other_modelroot = os.path.join(dataroot, 'NatureModel', 'OtherModel')
-    
+    # dataroot = os.path.join(projroot, 'Data')
+    # all_modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
+    # other_modelroot = os.path.join(dataroot, 'NatureModel', 'OtherModel')
+
+    BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+    all_modelroot = os.path.join(BaseDir, 'NatureModel', 'YuanpuModel')
+    other_modelroot = os.path.join(BaseDir, 'NatureModel', 'OtherModel')
+
+
     #modelname = 'multicontex'
     modelname    = 'multicontex_ind'
-   
+
     #weights_name = 'best_weights.pth'
     weights_name = 'weights.pth'
-    
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','OtherData', 'TestingData')
+
+    testingimageroot = os.path.join(BaseDir, 'NatureData','OtherData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset  modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
@@ -146,7 +151,7 @@ if __name__ == "__main__":
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []
-    
+
     for this_foldername in testing_folders:
         this_pool = template_pool[:]
         this_pool[0] = this_foldername
@@ -161,10 +166,10 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation_other')
+        saveroot = os.path.join(BaseDir, 'NatureData','YuanpuData','Experiments','evaluation_other')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
-        
+
         for idx, (this_foldername)  in enumerate(testing_folders):
             savefolder = os.path.join(saveroot, this_foldername)
             if not os.path.exists(savefolder):

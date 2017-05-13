@@ -121,10 +121,13 @@ def test_worker(testingpool, det_model, testingimageroot):
             tester.printCoords(threshhold=args.thresh_pool[0], step=1, min_len=args.lenpool[-1])
 
 if __name__ == "__main__":
-    dataroot = os.path.join(projroot, 'Data')
-    modelroot = os.path.join(dataroot, 'NatureModel', 'PingjunModel')
+    # dataroot = os.path.join(projroot, 'Data')
+    # modelroot = os.path.join(dataroot, 'NatureModel', 'PingjunModel')
+    BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+    modelroot = os.path.join(BaseDir, 'NatureModel', 'PingjunModel')
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData', 'TestingData')
+
+    testingimageroot = os.path.join(BaseDir, 'NatureData','YuanpuData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset  modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
@@ -133,7 +136,7 @@ if __name__ == "__main__":
                              ('Cervix', 'CervixLiver15'),
                              ('Cervix', 'CervixBase'),
                              ('Cervix', 'Cervix3Extra'),
-                                        
+
                              ('Colorectal', 'Colorectal3Extra'),
                              ('Colorectal', 'ColorectalEye5'),
                              ('Colorectal', 'ColorectalEye15'),
@@ -148,7 +151,7 @@ if __name__ == "__main__":
     template_tuple =  test_tuple(*template_pool)
 
     testing_pool = []
-    
+
     for this_foldername, trainingset in testing_folders:
         this_pool = template_pool[:]
         this_pool[0] = this_foldername
@@ -160,10 +163,10 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'NatureData','YuanpuData','Experiments','evaluation_pinjun')
+        saveroot = os.path.join(BaseDir, 'NatureData','YuanpuData','Experiments','evaluation_pinjun')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
-        
+
         for idx, (this_foldername,_)  in enumerate(testing_folders):
             savefolder = os.path.join(saveroot, this_foldername)
             if not os.path.exists(savefolder):
