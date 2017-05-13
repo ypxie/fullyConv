@@ -117,9 +117,11 @@ def test_worker(testingpool, det_model, testingimageroot):
 if __name__ == "__main__":
     # dataroot = os.path.join(projroot, 'Data')
     # modelroot = os.path.join(dataroot, 'NatureModel', 'PingjunModel')
-    modelroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'PingjunModel')
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','YuanpuData', 'TestingData')
+    BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+    modelroot = os.path.join(BaseDir, 'NatureModel', 'PingjunModel')
+
+    testingimageroot = os.path.join(BaseDir, 'NatureData','YuanpuData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset  modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
@@ -180,7 +182,7 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','YuanpuData','Experiments','evaluation_pinjun')
+        saveroot = os.path.join(BaseDir, 'NatureData','YuanpuData','Experiments','evaluation_pinjun')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
 

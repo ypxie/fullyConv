@@ -116,8 +116,9 @@ if __name__ == "__main__":
     # dataroot = os.path.join(projroot, 'Data')
     # all_modelroot = os.path.join(dataroot, 'NatureModel', 'YuanpuModel')
     # other_modelroot = os.path.join(dataroot, 'NatureModel', 'OtherModel')
-    all_modelroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'YuanpuModel')
-    other_modelroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureModel', 'OtherModel')
+    BaseDir = os.path.join(os.path.expanduser('~'), 'Dropbox', 'GenericCellDetection')
+    all_modelroot = os.path.join(BaseDir, 'NatureModel', 'YuanpuModel')
+    other_modelroot = os.path.join(BaseDir, 'NatureModel', 'OtherModel')
 
     if args.indvidual == False:  # Generic model
         modelname = 'multicontex'
@@ -130,7 +131,7 @@ if __name__ == "__main__":
         # modelname    = 'multicontex'
         # weights_name = 'weights.pth'
 
-    testingimageroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','OtherData', 'TestingData')
+    testingimageroot = os.path.join(BaseDir, 'NatureData','OtherData', 'TestingData')
     test_tuple = namedtuple('test',
                             'testingset ImgExt trainingset  modelroot det_model_folder weights_name Probrefresh Seedrefresh')
 
@@ -154,7 +155,7 @@ if __name__ == "__main__":
         test_worker(testing_pool, det_model, testingimageroot)
 
     if args.runEval:
-        saveroot = os.path.join(home, 'Dropbox', 'GenericCellDetection', 'NatureData','YuanpuData','Experiments','evaluation_other')
+        saveroot = os.path.join(BaseDir, 'NatureData','YuanpuData','Experiments','evaluation_other')
         if not os.path.exists(saveroot):
             os.makedirs(saveroot)
 
