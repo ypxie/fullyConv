@@ -6,7 +6,7 @@ coderoot   = os.path.join(projroot, 'Code')
 home = os.path.expanduser('~')
 sys.path.insert(0, os.path.join(coderoot))
 
-testingimageroot = os.path.join(home,'DataSet', 'FY_TMI', 'test')
+testingimageroot = os.path.join(home,'Dropbox','DataSet', 'FY_TMI', 'test')
 modelroot = os.path.join(projroot, 'Data','Model')
 
 from collections import namedtuple
@@ -35,7 +35,7 @@ parser.add_argument('--printImg', action='store_false', default=True, help='If y
 
 parser.add_argument('--lenpool', default=[7,9,11, 13], help='pool of length to get local maxima.')
 #parser.add_argument('--thresh_pool', default = np.arange(0.05, 0.4, 0.05), help='pool of length to get local maxima.')
-parser.add_argument('--thresh_pool', default = [0.25], help='pool of length to get local maxima.')
+parser.add_argument('--thresh_pool', default = np.arange(0.05, 0.7, 0.05), help='pool of length to get local maxima.')
 
 parser.add_argument('--seg_thresh_pool', default = np.arange(0.05, 0.6, 0.1), help='pool of length to get local maxima.')
 
@@ -48,14 +48,18 @@ args = parser.parse_args()
 test_tuple = namedtuple('test', 'testingset ImgExt trainingset det_model_folder weights_name Probrefresh Seedrefresh')
 
 testing = True
-device_id = 2
+device_id = 1
 det_model = build_model(multi_context = args.multi_context)
 
 modeltype = 'multiout' if args.multi_context else 'multiout_no_multicont'
 
 if args.cuda:
     det_model.cuda(device_id)
- 
+
+def get_resultmask(trainingset, model_folder, weightname):
+    return  trainingset + '_' + model_folder + '_' + weightname
+
+
 if __name__ == "__main__":
     img_channels = 3
     testingpool = [ 
@@ -79,7 +83,8 @@ if __name__ == "__main__":
 
         weights_name_noext, _ = os.path.splitext(weights_name)
        
-        resultmask   = det_model_folder  + '_' + weights_name_noext
+        resultmask = get_resultmask(this_test.trainingset, det_model_folder, weights_name_noext)
+
         testingimagefolder = os.path.join(testingimageroot, testingset)
         savefolder = os.path.join(testingimagefolder, resultmask)
         if not os.path.exists(savefolder):
@@ -121,6 +126,23 @@ if __name__ == "__main__":
         tester = runtestImg(classparams)
         if testing:
            tester.folder_seg(**testingParam)
-
+        
         if args.printImg:
             tester.printContours(threshhold= args.thresh_pool[0],  seg_thresh= args.seg_thresh_pool[3], min_len=args.lenpool[-2])
+        
+        if args.runEval:
+            eval_saveroot = os.path.join(home, 'Dropbox', 'DataSet', 'FY_TMI', 'evaluation')
+            if not os.path.exists(eval_saveroot):
+                os.makedirs(eval_saveroot)
+
+            savefolder = os.path.join(eval_saveroot, this_foldername)
+            if not os.path.exists(eval_saveroot):
+                os.makedirs(eval_saveroot)
+
+            this_folder = os.path.join(testingimageroot, testingset)
+            resfolder   = os.path.join(this_folder, resultmask)
+
+            eval_folder(imgfolder= this_folder, resfolder= resfolder,savefolder= savefolder,
+                        radius=16, resultmask = resultmask,thresh_pool=args.thresh_pool,
+                        len_pool= args.lenpool, imgExt=['.tif', '.jpg','.png'],contourname='Contours')
+    

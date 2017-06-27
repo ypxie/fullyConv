@@ -248,7 +248,7 @@ class runtestImg(object):
                         localseedname = get_seed_name(self.step, threshhold, min_len)
 
                         localseedtime = get_seed_name(self.step, threshhold, min_len) + '_time'
-
+                        
                         if self.Seedrefresh or localseedname not in resultsDict.keys():
                            VotingMap[VotingMap < threshhold*np.max(VotingMap[:])] = 0
 
@@ -292,8 +292,8 @@ class runtestImg(object):
                  orgimg =  orgimg.reshape(orgimg.shape[0],orgimg.shape[1],1)
                  orgimg = np.concatenate((orgimg,orgimg,orgimg),axis = 2)
             imgname = imagenamelist[imgindx]
-            resultDictPath = os.path.join(self.savefolder,  imgname + '_'+ self.resultmask + '.h5')
-            resultDictPath_mat = os.path.join(self.savefolder, imgname + '_'+ self.resultmask + '.mat')
+            resultDictPath = os.path.join(self.savefolder,  imgname +  '.h5')
+            resultDictPath_mat = os.path.join(self.savefolder, imgname + '.mat')
             if os.path.isfile(resultDictPath):
                try:
                   resultsDict = dd.io.load(resultDictPath)
@@ -342,6 +342,8 @@ class runtestImg(object):
                     for min_len in self.lenpool:
                         thisStart = time.time()
                         localseedname = get_seed_name(self.step, threshhold, min_len)
+                        localseedtime = get_seed_name(self.step, threshhold, min_len) + '_time'
+                        
                         if self.Seedrefresh or localseedname not in resultsDict.keys():
                             VotingMap_det[VotingMap_det < threshhold*np.max(VotingMap_det[:])] = 0
 
@@ -351,6 +353,8 @@ class runtestImg(object):
                                 print("you have empty coordinates for img:{s}".format(s=imgname))
 
                             resultsDict[localseedname] = coordinates
+                            detEnding_time = time.time()
+                            resultsDict[localseedtime] = detEnding_time - thisStart + resultsDict[voting_time_name] 
 
                             if self.showseed:
                                 if coordinates.size > 0:

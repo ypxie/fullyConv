@@ -50,7 +50,7 @@ def train_worker(trainingDataroot, trainingset, modelroot='.', device=0, multi_c
 
         parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                             help='how many batches to wait before logging training status')
-
+                            
         parser.add_argument('--use_validation', action='store_false', default=False,
                             help='If use validation or not.')
         parser.add_argument('--validfreq', type=int, default=10, metavar='N',
